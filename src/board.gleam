@@ -10,15 +10,22 @@ pub type Board =
   Dict(Position, Piece)
 
 pub fn insert_starting_row(b: Board, f: file.File, t: team.Team) -> Board {
-  b
-  |> dict.insert(Position(rank.from_int(1), f), Piece(t, piece.Rook))
-  |> dict.insert(Position(rank.from_int(2), f), Piece(t, piece.Knight))
-  |> dict.insert(Position(rank.from_int(3), f), Piece(t, piece.Bishop))
-  |> dict.insert(Position(rank.from_int(4), f), Piece(t, piece.Queen))
-  |> dict.insert(Position(rank.from_int(5), f), Piece(t, piece.King))
-  |> dict.insert(Position(rank.from_int(6), f), Piece(t, piece.Bishop))
-  |> dict.insert(Position(rank.from_int(7), f), Piece(t, piece.Knight))
-  |> dict.insert(Position(rank.from_int(8), f), Piece(t, piece.Rook))
+  list.fold(
+    [
+      #(1, piece.Rook),
+      #(2, piece.Knight),
+      #(3, piece.Bishop),
+      #(4, piece.Queen),
+      #(5, piece.King),
+      #(6, piece.Bishop),
+      #(7, piece.Knight),
+      #(8, piece.Rook),
+    ],
+    b,
+    fn(b, ip) {
+      dict.insert(b, Position(rank.from_int(ip.0), f), Piece(t, ip.1))
+    },
+  )
 }
 
 pub fn insert_pawn_row(board: Board, f: file.File, t: team.Team) -> Board {
