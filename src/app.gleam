@@ -1,36 +1,87 @@
+import board.{type Board}
+import file.{type File}
 import gleam/int
+import gleam/io
+import gleam/list
+import gleam/result
 import lustre
+import lustre/attribute
 import lustre/element
 import lustre/element/html
 import lustre/event
+import piece
+import position
+import rank.{type Rank}
+import render
+import team.{type Team, Black, White}
 
 pub type Model =
-  Int
+  Board
 
 fn init(_flags) -> Model {
-  0
+  board.new_board()
 }
 
-pub type Msg {
-  Increment
-  Decrement
+pub type Msg
+
+pub fn update(model: Model, _msg: Msg) -> Model {
+  model
 }
 
-pub fn update(model: Model, msg: Msg) -> Model {
-  case msg {
-    Increment -> model + 1
-    Decrement -> model - 1
+pub fn render_piece(
+  board: Board,
+  pos: position.Position,
+) -> Result(element.Element(Msg), Nil) {
+  use piece <- result.try(board.board_get(board, pos))
+  let piece_color = case piece.team {
+    White -> "#0f0"
+    Black -> "#fff"
   }
+
+  Ok(
+    html.div(
+      [attribute.class("square"), attribute.style([#("color", piece_color)])],
+      [
+        html.span([attribute.style([#("cursor", "grab")])], [
+          element.text(piece.to_string(piece)),
+        ]),
+      ],
+    ),
+  )
+}
+
+pub fn render_square(
+  board: Board,
+  pos: position.Position,
+) -> element.Element(Msg) {
+  let bg_class =
+    attribute.class(case render.bg_color(pos) {
+      render.Dark -> "dark"
+      render.Light -> "light"
+    })
+  html.div([bg_class], [
+    case render_piece(board, pos) {
+      Ok(element) -> element
+      Error(_) -> html.div([], [html.text(" ")])
+    },
+  ])
+}
+
+pub fn render_rank(board: Board, rank: Rank) -> element.Element(Msg) {
+  html.div(
+    [attribute.class("file")],
+    list.map(file.files(), fn(file) {
+      render_square(board, position.Position(rank, file))
+    }),
+  )
 }
 
 pub fn view(model: Model) -> element.Element(Msg) {
-  let count = int.to_string(model)
-
-  html.div([], [
-    html.button([event.on_click(Increment)], [element.text("+")]),
-    element.text(count),
-    html.button([event.on_click(Decrement)], [element.text("-")]),
-  ])
+  let board = model
+  html.pre(
+    [attribute.class("chessboard")],
+    list.map(rank.ranks(), fn(rank) { render_rank(board, rank) }),
+  )
 }
 
 pub fn main() {

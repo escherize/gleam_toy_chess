@@ -4,7 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>🚧 app</title>
+    <title>🚧 gleam chess</title>
+    <style>
+     .chessboard {
+       display: grid;
+       grid-template-rows: repeat(8, 50px); /* 8 rows for the chessboard */
+       grid-template-columns: repeat(8, 50px); /* 8 columns for the chessboard */
+       width: 400px; /* 8 * 50px */
+       height: 400px; /* 8 * 50px */
+       /* border: 2px solid black; */
+     }
+
+     .light, .dark {
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       font-size: 42px; /* Adjust for chess piece size */
+     }
+
+     .light {
+       background-color: #f00;
+     }
+
+     .dark {
+       background-color: #00f;
+     }
+    </style>
 
     <!-- Uncomment this if you add the TailwindCSS integration -->
     <!-- <link rel="stylesheet" href="/priv/static/app.css"> -->

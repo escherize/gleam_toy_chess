@@ -77,6 +77,95 @@ var NonEmpty = class extends List {
     this.tail = tail;
   }
 };
+var BitArray = class _BitArray {
+  constructor(buffer) {
+    if (!(buffer instanceof Uint8Array)) {
+      throw "BitArray can only be constructed from a Uint8Array";
+    }
+    this.buffer = buffer;
+  }
+  // @internal
+  get length() {
+    return this.buffer.length;
+  }
+  // @internal
+  byteAt(index2) {
+    return this.buffer[index2];
+  }
+  // @internal
+  floatFromSlice(start3, end, isBigEndian) {
+    return byteArrayToFloat(this.buffer, start3, end, isBigEndian);
+  }
+  // @internal
+  intFromSlice(start3, end, isBigEndian, isSigned) {
+    return byteArrayToInt(this.buffer, start3, end, isBigEndian, isSigned);
+  }
+  // @internal
+  binaryFromSlice(start3, end) {
+    return new _BitArray(this.buffer.slice(start3, end));
+  }
+  // @internal
+  sliceAfter(index2) {
+    return new _BitArray(this.buffer.slice(index2));
+  }
+};
+var UtfCodepoint = class {
+  constructor(value) {
+    this.value = value;
+  }
+};
+function byteArrayToInt(byteArray, start3, end, isBigEndian, isSigned) {
+  const byteSize = end - start3;
+  if (byteSize <= 6) {
+    let value = 0;
+    if (isBigEndian) {
+      for (let i = start3; i < end; i++) {
+        value = value * 256 + byteArray[i];
+      }
+    } else {
+      for (let i = end - 1; i >= start3; i--) {
+        value = value * 256 + byteArray[i];
+      }
+    }
+    if (isSigned) {
+      const highBit = 2 ** (byteSize * 8 - 1);
+      if (value >= highBit) {
+        value -= highBit * 2;
+      }
+    }
+    return value;
+  } else {
+    let value = 0n;
+    if (isBigEndian) {
+      for (let i = start3; i < end; i++) {
+        value = (value << 8n) + BigInt(byteArray[i]);
+      }
+    } else {
+      for (let i = end - 1; i >= start3; i--) {
+        value = (value << 8n) + BigInt(byteArray[i]);
+      }
+    }
+    if (isSigned) {
+      const highBit = 1n << BigInt(byteSize * 8 - 1);
+      if (value >= highBit) {
+        value -= highBit * 2n;
+      }
+    }
+    return Number(value);
+  }
+}
+function byteArrayToFloat(byteArray, start3, end, isBigEndian) {
+  const view2 = new DataView(byteArray.buffer);
+  const byteSize = end - start3;
+  if (byteSize === 8) {
+    return view2.getFloat64(start3, !isBigEndian);
+  } else if (byteSize === 4) {
+    return view2.getFloat32(start3, !isBigEndian);
+  } else {
+    const msg = `Sized floats must be 32-bit or 64-bit on JavaScript, got size of ${byteSize * 8} bits`;
+    throw new globalThis.Error(msg);
+  }
+}
 var Result = class _Result extends CustomType {
   // @internal
   static isResult(data) {
@@ -169,6 +258,13 @@ function structurallyCompatibleObjects(a, b) {
     return false;
   return a.constructor === b.constructor;
 }
+function remainderInt(a, b) {
+  if (b === 0) {
+    return 0;
+  } else {
+    return a % b;
+  }
+}
 function makeError(variant, module, line, fn, message, extra) {
   let error = new globalThis.Error(message);
   error.gleam_error = variant;
@@ -180,6 +276,14 @@ function makeError(variant, module, line, fn, message, extra) {
     error[k] = extra[k];
   return error;
 }
+
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
 
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
 var None = class extends CustomType {
@@ -223,6 +327,42 @@ function keys(dict2) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
+function reverse_loop(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
+    } else {
+      let item = remaining.head;
+      let rest$1 = remaining.tail;
+      loop$remaining = rest$1;
+      loop$accumulator = prepend(item, accumulator);
+    }
+  }
+}
+function reverse(list2) {
+  return reverse_loop(list2, toList([]));
+}
+function map_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = prepend(fun(first$1), acc);
+    }
+  }
+}
+function map(list2, fun) {
+  return map_loop(list2, fun, toList([]));
+}
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
     let list2 = loop$list;
@@ -260,6 +400,28 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
 function index_fold(list2, initial, fun) {
   return index_fold_loop(list2, initial, fun, 0);
 }
+function range_loop(loop$start, loop$stop, loop$acc) {
+  while (true) {
+    let start3 = loop$start;
+    let stop = loop$stop;
+    let acc = loop$acc;
+    let $ = compare2(start3, stop);
+    if ($ instanceof Eq) {
+      return prepend(stop, acc);
+    } else if ($ instanceof Gt) {
+      loop$start = start3;
+      loop$stop = stop + 1;
+      loop$acc = prepend(stop, acc);
+    } else {
+      loop$start = start3;
+      loop$stop = stop - 1;
+      loop$acc = prepend(stop, acc);
+    }
+  }
+}
+function range(start3, stop) {
+  return range_loop(start3, stop, toList([]));
+}
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
 function drop_start(loop$string, loop$num_graphemes) {
@@ -279,6 +441,21 @@ function drop_start(loop$string, loop$num_graphemes) {
         return string2;
       }
     }
+  }
+}
+function inspect2(term) {
+  let _pipe = inspect(term);
+  return identity(_pipe);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/result.mjs
+function try$(result, fun) {
+  if (result.isOk()) {
+    let x = result[0];
+    return fun(x);
+  } else {
+    let e = result[0];
+    return new Error(e);
   }
 }
 
@@ -990,8 +1167,25 @@ var unequalDictSymbol = Symbol();
 
 // build/dev/javascript/gleam_stdlib/gleam_stdlib.mjs
 var Nil = void 0;
+var NOT_FOUND = {};
+function identity(x) {
+  return x;
+}
 function to_string(term) {
   return term.toString();
+}
+function float_to_string(float3) {
+  const string2 = float3.toString().replace("+", "");
+  if (string2.indexOf(".") >= 0) {
+    return string2;
+  } else {
+    const index2 = string2.indexOf("e");
+    if (index2 >= 0) {
+      return string2.slice(0, index2) + ".0" + string2.slice(index2);
+    } else {
+      return string2 + ".0";
+    }
+  }
 }
 var segmenter = void 0;
 function graphemes_iterator(string2) {
@@ -1036,14 +1230,166 @@ var unicode_whitespaces = [
 ].join("");
 var trim_start_regex = new RegExp(`^[${unicode_whitespaces}]*`);
 var trim_end_regex = new RegExp(`[${unicode_whitespaces}]*$`);
+function print_debug(string2) {
+  if (typeof process === "object" && process.stderr?.write) {
+    process.stderr.write(string2 + "\n");
+  } else if (typeof Deno === "object") {
+    Deno.stderr.writeSync(new TextEncoder().encode(string2 + "\n"));
+  } else {
+    console.log(string2);
+  }
+}
 function new_map() {
   return Dict.new();
 }
 function map_to_list(map4) {
   return List.fromArray(map4.entries());
 }
+function map_get(map4, key) {
+  const value = map4.get(key, NOT_FOUND);
+  if (value === NOT_FOUND) {
+    return new Error(Nil);
+  }
+  return new Ok(value);
+}
 function map_insert(key, value, map4) {
   return map4.set(key, value);
+}
+function inspect(v) {
+  const t = typeof v;
+  if (v === true)
+    return "True";
+  if (v === false)
+    return "False";
+  if (v === null)
+    return "//js(null)";
+  if (v === void 0)
+    return "Nil";
+  if (t === "string")
+    return inspectString(v);
+  if (t === "bigint" || Number.isInteger(v))
+    return v.toString();
+  if (t === "number")
+    return float_to_string(v);
+  if (Array.isArray(v))
+    return `#(${v.map(inspect).join(", ")})`;
+  if (v instanceof List)
+    return inspectList(v);
+  if (v instanceof UtfCodepoint)
+    return inspectUtfCodepoint(v);
+  if (v instanceof BitArray)
+    return inspectBitArray(v);
+  if (v instanceof CustomType)
+    return inspectCustomType(v);
+  if (v instanceof Dict)
+    return inspectDict(v);
+  if (v instanceof Set)
+    return `//js(Set(${[...v].map(inspect).join(", ")}))`;
+  if (v instanceof RegExp)
+    return `//js(${v})`;
+  if (v instanceof Date)
+    return `//js(Date("${v.toISOString()}"))`;
+  if (v instanceof Function) {
+    const args = [];
+    for (const i of Array(v.length).keys())
+      args.push(String.fromCharCode(i + 97));
+    return `//fn(${args.join(", ")}) { ... }`;
+  }
+  return inspectObject(v);
+}
+function inspectString(str) {
+  let new_str = '"';
+  for (let i = 0; i < str.length; i++) {
+    let char = str[i];
+    switch (char) {
+      case "\n":
+        new_str += "\\n";
+        break;
+      case "\r":
+        new_str += "\\r";
+        break;
+      case "	":
+        new_str += "\\t";
+        break;
+      case "\f":
+        new_str += "\\f";
+        break;
+      case "\\":
+        new_str += "\\\\";
+        break;
+      case '"':
+        new_str += '\\"';
+        break;
+      default:
+        if (char < " " || char > "~" && char < "\xA0") {
+          new_str += "\\u{" + char.charCodeAt(0).toString(16).toUpperCase().padStart(4, "0") + "}";
+        } else {
+          new_str += char;
+        }
+    }
+  }
+  new_str += '"';
+  return new_str;
+}
+function inspectDict(map4) {
+  let body = "dict.from_list([";
+  let first2 = true;
+  map4.forEach((value, key) => {
+    if (!first2)
+      body = body + ", ";
+    body = body + "#(" + inspect(key) + ", " + inspect(value) + ")";
+    first2 = false;
+  });
+  return body + "])";
+}
+function inspectObject(v) {
+  const name = Object.getPrototypeOf(v)?.constructor?.name || "Object";
+  const props = [];
+  for (const k of Object.keys(v)) {
+    props.push(`${inspect(k)}: ${inspect(v[k])}`);
+  }
+  const body = props.length ? " " + props.join(", ") + " " : "";
+  const head = name === "Object" ? "" : name + " ";
+  return `//js(${head}{${body}})`;
+}
+function inspectCustomType(record) {
+  const props = Object.keys(record).map((label) => {
+    const value = inspect(record[label]);
+    return isNaN(parseInt(label)) ? `${label}: ${value}` : value;
+  }).join(", ");
+  return props ? `${record.constructor.name}(${props})` : record.constructor.name;
+}
+function inspectList(list2) {
+  return `[${list2.toArray().map(inspect).join(", ")}]`;
+}
+function inspectBitArray(bits) {
+  return `<<${Array.from(bits.buffer).join(", ")}>>`;
+}
+function inspectUtfCodepoint(codepoint2) {
+  return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/int.mjs
+function compare2(a, b) {
+  let $ = a === b;
+  if ($) {
+    return new Eq();
+  } else {
+    let $1 = a < b;
+    if ($1) {
+      return new Lt();
+    } else {
+      return new Gt();
+    }
+  }
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/io.mjs
+function debug(term) {
+  let _pipe = term;
+  let _pipe$1 = inspect2(_pipe);
+  print_debug(_pipe$1);
+  return term;
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/bool.mjs
@@ -1097,13 +1443,6 @@ var Attribute = class extends CustomType {
     this[0] = x0;
     this[1] = x1;
     this.as_property = as_property;
-  }
-};
-var Event = class extends CustomType {
-  constructor(x0, x1) {
-    super();
-    this[0] = x0;
-    this[1] = x1;
   }
 };
 function attribute_to_event_handler(attribute2) {
@@ -1164,8 +1503,25 @@ function handlers(element2) {
 }
 
 // build/dev/javascript/lustre/lustre/attribute.mjs
-function on(name, handler) {
-  return new Event("on" + name, handler);
+function attribute(name, value) {
+  return new Attribute(name, identity(value), false);
+}
+function style(properties) {
+  return attribute(
+    "style",
+    fold(
+      properties,
+      "",
+      (styles, _use1) => {
+        let name$1 = _use1[0];
+        let value$1 = _use1[1];
+        return styles + name$1 + ":" + value$1 + ";";
+      }
+    )
+  );
+}
+function class$(name) {
+  return attribute("class", name);
 }
 
 // build/dev/javascript/lustre/lustre/element.mjs
@@ -1905,53 +2261,337 @@ function start2(app, selector, flags) {
 }
 
 // build/dev/javascript/lustre/lustre/element/html.mjs
+function text2(content) {
+  return text(content);
+}
 function div(attrs, children2) {
   return element("div", attrs, children2);
 }
-function button(attrs, children2) {
-  return element("button", attrs, children2);
+function pre(attrs, children2) {
+  return element("pre", attrs, children2);
+}
+function span(attrs, children2) {
+  return element("span", attrs, children2);
 }
 
-// build/dev/javascript/lustre/lustre/event.mjs
-function on2(name, handler) {
-  return on(name, handler);
+// build/dev/javascript/app/file.mjs
+var A = class extends CustomType {
+};
+var B = class extends CustomType {
+};
+var C = class extends CustomType {
+};
+var D = class extends CustomType {
+};
+var E = class extends CustomType {
+};
+var F = class extends CustomType {
+};
+var G = class extends CustomType {
+};
+var H = class extends CustomType {
+};
+function files() {
+  return toList([
+    new H(),
+    new G(),
+    new F(),
+    new E(),
+    new D(),
+    new C(),
+    new B(),
+    new A()
+  ]);
 }
-function on_click(msg) {
-  return on2("click", (_) => {
-    return new Ok(msg);
-  });
+function to_int(f) {
+  if (f instanceof A) {
+    return 1;
+  } else if (f instanceof B) {
+    return 2;
+  } else if (f instanceof C) {
+    return 3;
+  } else if (f instanceof D) {
+    return 4;
+  } else if (f instanceof E) {
+    return 5;
+  } else if (f instanceof F) {
+    return 6;
+  } else if (f instanceof G) {
+    return 7;
+  } else {
+    return 8;
+  }
+}
+
+// build/dev/javascript/app/team.mjs
+var White = class extends CustomType {
+};
+var Black = class extends CustomType {
+};
+
+// build/dev/javascript/app/piece.mjs
+var Pawn = class extends CustomType {
+};
+var Rook = class extends CustomType {
+};
+var Knight = class extends CustomType {
+};
+var Bishop = class extends CustomType {
+};
+var Queen = class extends CustomType {
+};
+var King = class extends CustomType {
+};
+var Piece = class extends CustomType {
+  constructor(team, kind) {
+    super();
+    this.team = team;
+    this.kind = kind;
+  }
+};
+function to_string2(piece) {
+  let $ = piece.kind;
+  if ($ instanceof Pawn) {
+    return "\u265F";
+  } else if ($ instanceof Rook) {
+    return "\u265C";
+  } else if ($ instanceof Knight) {
+    return "\u265E";
+  } else if ($ instanceof Bishop) {
+    return "\u265D";
+  } else if ($ instanceof Queen) {
+    return "\u265B";
+  } else {
+    return "\u265A";
+  }
+}
+
+// build/dev/javascript/app/rank.mjs
+var Rank = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
+function from_int(i) {
+  if (i === 1) {
+    return new Rank(1);
+  } else if (i === 2) {
+    return new Rank(2);
+  } else if (i === 3) {
+    return new Rank(3);
+  } else if (i === 4) {
+    return new Rank(4);
+  } else if (i === 5) {
+    return new Rank(5);
+  } else if (i === 6) {
+    return new Rank(6);
+  } else if (i === 7) {
+    return new Rank(7);
+  } else if (i === 8) {
+    return new Rank(8);
+  } else {
+    debug(["rank/from_int", i]);
+    throw makeError("panic", "rank", 19, "from_int", "Invalid rank!", {});
+  }
+}
+function to_int2(rank) {
+  {
+    let i = rank[0];
+    return i;
+  }
+}
+function ranks() {
+  return toList([
+    new Rank(1),
+    new Rank(2),
+    new Rank(3),
+    new Rank(4),
+    new Rank(5),
+    new Rank(6),
+    new Rank(7),
+    new Rank(8)
+  ]);
+}
+
+// build/dev/javascript/app/position.mjs
+var Position = class extends CustomType {
+  constructor(rank, file) {
+    super();
+    this.rank = rank;
+    this.file = file;
+  }
+};
+
+// build/dev/javascript/app/board.mjs
+function insert_starting_row(b, f, t) {
+  let _pipe = b;
+  let _pipe$1 = insert(
+    _pipe,
+    new Position(from_int(1), f),
+    new Piece(t, new Rook())
+  );
+  let _pipe$2 = insert(
+    _pipe$1,
+    new Position(from_int(2), f),
+    new Piece(t, new Knight())
+  );
+  let _pipe$3 = insert(
+    _pipe$2,
+    new Position(from_int(3), f),
+    new Piece(t, new Bishop())
+  );
+  let _pipe$4 = insert(
+    _pipe$3,
+    new Position(from_int(4), f),
+    new Piece(t, new Queen())
+  );
+  let _pipe$5 = insert(
+    _pipe$4,
+    new Position(from_int(5), f),
+    new Piece(t, new King())
+  );
+  let _pipe$6 = insert(
+    _pipe$5,
+    new Position(from_int(6), f),
+    new Piece(t, new Bishop())
+  );
+  let _pipe$7 = insert(
+    _pipe$6,
+    new Position(from_int(7), f),
+    new Piece(t, new Knight())
+  );
+  return insert(
+    _pipe$7,
+    new Position(from_int(8), f),
+    new Piece(t, new Rook())
+  );
+}
+function insert_pawn_row(board, f, t) {
+  let files2 = (() => {
+    let _pipe = range(1, 8);
+    return map(_pipe, (_capture) => {
+      return from_int(_capture);
+    });
+  })();
+  return fold(
+    files2,
+    board,
+    (b, rank) => {
+      return insert(
+        b,
+        new Position(rank, f),
+        new Piece(t, new Pawn())
+      );
+    }
+  );
+}
+function new_board() {
+  let board = new_map();
+  let _pipe = board;
+  let _pipe$1 = insert_starting_row(_pipe, new A(), new White());
+  let _pipe$2 = insert_starting_row(_pipe$1, new H(), new Black());
+  let _pipe$3 = insert_pawn_row(_pipe$2, new B(), new White());
+  return insert_pawn_row(_pipe$3, new G(), new Black());
+}
+function board_get(board, position) {
+  return map_get(board, position);
+}
+
+// build/dev/javascript/app/render.mjs
+var Light = class extends CustomType {
+};
+var Dark = class extends CustomType {
+};
+function bg_color(p) {
+  let $ = remainderInt(to_int2(p.rank) + to_int(p.file), 2) === 0;
+  if ($) {
+    return new Dark();
+  } else {
+    return new Light();
+  }
 }
 
 // build/dev/javascript/app/app.mjs
-var Increment = class extends CustomType {
-};
-var Decrement = class extends CustomType {
-};
 function init2(_) {
-  return 0;
+  return new_board();
 }
-function update(model, msg) {
-  if (msg instanceof Increment) {
-    return model + 1;
-  } else {
-    return model - 1;
-  }
+function update(model, _) {
+  return model;
+}
+function render_piece(board, pos) {
+  return try$(
+    board_get(board, pos),
+    (piece) => {
+      let piece_color = (() => {
+        let $ = piece.team;
+        if ($ instanceof White) {
+          return "#0f0";
+        } else {
+          return "#fff";
+        }
+      })();
+      return new Ok(
+        div(
+          toList([
+            class$("square"),
+            style(toList([["color", piece_color]]))
+          ]),
+          toList([
+            span(
+              toList([style(toList([["cursor", "grab"]]))]),
+              toList([text(to_string2(piece))])
+            )
+          ])
+        )
+      );
+    }
+  );
+}
+function render_square(board, pos) {
+  let bg_class = class$(
+    (() => {
+      let $ = bg_color(pos);
+      if ($ instanceof Dark) {
+        return "dark";
+      } else {
+        return "light";
+      }
+    })()
+  );
+  return div(
+    toList([bg_class]),
+    toList([
+      (() => {
+        let $ = render_piece(board, pos);
+        if ($.isOk()) {
+          let element2 = $[0];
+          return element2;
+        } else {
+          return div(toList([]), toList([text2(" ")]));
+        }
+      })()
+    ])
+  );
+}
+function render_rank(board, rank) {
+  return div(
+    toList([class$("file")]),
+    map(
+      files(),
+      (file) => {
+        return render_square(board, new Position(rank, file));
+      }
+    )
+  );
 }
 function view(model) {
-  let count = to_string(model);
-  return div(
-    toList([]),
-    toList([
-      button(
-        toList([on_click(new Increment())]),
-        toList([text("+")])
-      ),
-      text(count),
-      button(
-        toList([on_click(new Decrement())]),
-        toList([text("-")])
-      )
-    ])
+  let board = model;
+  return pre(
+    toList([class$("chessboard")]),
+    map(ranks(), (rank) => {
+      return render_rank(board, rank);
+    })
   );
 }
 function main() {
@@ -1961,7 +2601,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      38,
+      89,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }
