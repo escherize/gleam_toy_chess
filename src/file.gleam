@@ -25,3 +25,17 @@ pub fn to_int(f: File) -> Int {
     H -> 8
   }
 }
+
+pub fn from_string(s: String) -> Result(File, String) {
+  case s {
+    "A" -> Ok(A)
+    "B" -> Ok(B)
+    "C" -> Ok(C)
+    "D" -> Ok(D)
+    "E" -> Ok(E)
+    "F" -> Ok(F)
+    "G" -> Ok(G)
+    "H" -> Ok(H)
+    _ -> Error("Invalid file in from_string")
+  }
+}

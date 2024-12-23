@@ -1,19 +1,16 @@
 import board.{type Board}
-import file.{type File}
-import gleam/int
-import gleam/io
+import file
 import gleam/list
 import gleam/result
 import lustre
 import lustre/attribute
 import lustre/element
 import lustre/element/html
-import lustre/event
 import piece
 import position
 import rank.{type Rank}
 import render
-import team.{type Team, Black, White}
+import team.{Black, White}
 
 pub type Model =
   Board
@@ -32,12 +29,11 @@ pub fn render_piece(
   board: Board,
   pos: position.Position,
 ) -> Result(element.Element(Msg), Nil) {
-  use piece <- result.try(board.board_get(board, pos))
+  use piece <- result.try(board.get(board, pos))
   let piece_color = case piece.team {
     White -> "#0f0"
     Black -> "#fff"
   }
-
   Ok(
     html.div(
       [attribute.class("square"), attribute.style([#("color", piece_color)])],
@@ -54,16 +50,9 @@ pub fn render_square(
   board: Board,
   pos: position.Position,
 ) -> element.Element(Msg) {
-  let bg_class =
-    attribute.class(case render.bg_color(pos) {
-      render.Dark -> "dark"
-      render.Light -> "light"
-    })
-  html.div([bg_class], [
-    case render_piece(board, pos) {
-      Ok(element) -> element
-      Error(_) -> html.div([], [html.text(" ")])
-    },
+  html.div([attribute.class(render.bg_color(pos))], [
+    render_piece(board, pos)
+    |> result.unwrap(html.div([], [html.text(" ")])),
   ])
 }
 

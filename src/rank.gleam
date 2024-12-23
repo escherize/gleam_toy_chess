@@ -44,6 +44,20 @@ pub fn to_string(rank: Rank) -> String {
   }
 }
 
+pub fn from_string(s: String) -> Result(Rank, String) {
+  case s {
+    "1" -> Ok(Rank(1))
+    "2" -> Ok(Rank(2))
+    "3" -> Ok(Rank(3))
+    "4" -> Ok(Rank(4))
+    "5" -> Ok(Rank(5))
+    "6" -> Ok(Rank(6))
+    "7" -> Ok(Rank(7))
+    "8" -> Ok(Rank(8))
+    _ -> Error("invalid input to rank/from_string: " <> s)
+  }
+}
+
 pub fn ranks() -> List(Rank) {
   [Rank(1), Rank(2), Rank(3), Rank(4), Rank(5), Rank(6), Rank(7), Rank(8)]
 }

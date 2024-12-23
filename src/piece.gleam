@@ -1,6 +1,6 @@
 import team
 
-pub type PieceType {
+pub type PieceKind {
   Pawn
   Rook
   Knight
@@ -10,7 +10,7 @@ pub type PieceType {
 }
 
 pub type Piece {
-  Piece(team: team.Team, kind: PieceType)
+  Piece(team: team.Team, kind: PieceKind)
 }
 
 pub fn to_string(piece: Piece) -> String {
