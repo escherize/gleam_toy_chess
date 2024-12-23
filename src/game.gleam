@@ -1,5 +1,5 @@
 import board
-import file
+import file.{A}
 import gleam/option.{type Option, None}
 import gleam/result
 import piece
@@ -31,12 +31,16 @@ pub fn legal_moves(
 ) -> Result(List(position.Position), Nil) {
   use piece <- result.try(board.get(game.board, pos))
   case piece.kind {
-    _ -> Ok([position.new(rank.from_int(1), file.A)])
-    // piece.Bishop -> todo
-    // piece.King -> todo
-    // piece.Knight -> todo
-    // piece.Pawn -> todo
-    // piece.Queen -> todo
-    // piece.Rook -> todo
+    piece.Bishop -> Ok([])
+    piece.King -> Ok([])
+    piece.Knight -> Ok([])
+    piece.Pawn -> {
+     case piece.team {
+       team.Black -> position.(pos)
+       team.White -> todo
+     }
+    }
+    piece.Queen -> Ok([])
+    piece.Rook -> Ok([])
   }
 }

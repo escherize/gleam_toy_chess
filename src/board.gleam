@@ -9,38 +9,35 @@ import team
 pub type Board =
   Dict(Position, Piece)
 
-pub fn starting_row(b: Board, f: file.File, t: team.Team) -> Board {
+pub fn starting_row(b: Board, r: rank.Rank, t: team.Team) -> Board {
   list.fold(
     [
-      #(1, piece.Rook),
-      #(2, piece.Knight),
-      #(3, piece.Bishop),
-      #(4, piece.Queen),
-      #(5, piece.King),
-      #(6, piece.Bishop),
-      #(7, piece.Knight),
-      #(8, piece.Rook),
+      #(file.A, piece.Rook),
+      #(file.B, piece.Knight),
+      #(file.C, piece.Bishop),
+      #(file.D, piece.Queen),
+      #(file.E, piece.King),
+      #(file.F, piece.Bishop),
+      #(file.G, piece.Knight),
+      #(file.H, piece.Rook),
     ],
     b,
-    fn(b, ip) {
-      dict.insert(b, Position(rank.from_int(ip.0), f), Piece(t, ip.1))
-    },
+    fn(b, iif) { dict.insert(b, Position(iif.0, r), piece.new(t, iif.1)) },
   )
 }
 
-pub fn starting_pawns(board: Board, f: file.File, t: team.Team) -> Board {
-  let files = list.range(1, 8) |> list.map(rank.from_int(_))
-  list.fold(files, board, fn(b, rank) {
-    dict.insert(b, Position(rank, f), piece.Piece(t, piece.Pawn))
+pub fn starting_pawns(board: Board, r: rank.Rank, t: team.Team) -> Board {
+  list.fold(file.files(), board, fn(b, f) {
+    dict.insert(b, Position(f, r), piece.new(t, piece.Pawn))
   })
 }
 
 pub fn new_board() -> Board {
   dict.new()
-  |> starting_row(file.A, team.White)
-  |> starting_row(file.H, team.Black)
-  |> starting_pawns(file.B, team.White)
-  |> starting_pawns(file.G, team.Black)
+  |> starting_row(rank.new(1), team.White)
+  |> starting_pawns(rank.new(2), team.White)
+  |> starting_row(rank.new(8), team.Black)
+  |> starting_pawns(rank.new(7), team.Black)
 }
 
 pub fn get(board: Board, position: Position) -> Result(Piece, Nil) {

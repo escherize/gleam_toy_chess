@@ -1,5 +1,6 @@
 import board.{type Board}
-import file
+import file.{type File}
+import game.{type Game}
 import gleam/list
 import gleam/result
 import lustre
@@ -13,16 +14,35 @@ import render
 import team.{Black, White}
 
 pub type Model =
-  Board
+  Game
 
 fn init(_flags) -> Model {
-  board.new_board()
+  game.new()
 }
 
-pub type Msg
+pub type Msg {
+  UserClicked(position.Position)
+}
 
-pub fn update(model: Model, _msg: Msg) -> Model {
-  model
+pub fn handle_click(model: Model, pos: position.Position) -> Model {
+  let board = model.board
+  case board.get(board, pos) {
+    Ok(piece) -> {
+      // todo: implement piece selected
+      model
+    }
+    Error(_) -> {
+      model
+    }
+  }
+}
+
+pub fn update(model: Model, msg: Msg) -> Model {
+  case msg {
+    UserClicked(pos) -> {
+      handle_click(model, pos)
+    }
+  }
 }
 
 pub fn render_piece(
@@ -31,12 +51,16 @@ pub fn render_piece(
 ) -> Result(element.Element(Msg), Nil) {
   use piece <- result.try(board.get(board, pos))
   let piece_color = case piece.team {
-    White -> "#0f0"
-    Black -> "#fff"
+    White -> "#eee"
+    Black -> "#111"
   }
   Ok(
     html.div(
-      [attribute.class("square"), attribute.style([#("color", piece_color)])],
+      [
+        attribute.class("square"),
+        attribute.class("piece"),
+        attribute.style([#("color", piece_color)]),
+      ],
       [
         html.span([attribute.style([#("cursor", "grab")])], [
           element.text(piece.to_string(piece)),
@@ -50,26 +74,35 @@ pub fn render_square(
   board: Board,
   pos: position.Position,
 ) -> element.Element(Msg) {
-  html.div([attribute.class(render.bg_color(pos))], [
-    render_piece(board, pos)
-    |> result.unwrap(html.div([], [html.text(" ")])),
+  html.div([attribute.class("square"), attribute.class(render.bg_color(pos))], [
+    {
+      let spot =
+        html.div([attribute.style([#("font-size", "20px")])], [
+          element.text(position.to_string(pos)),
+        ])
+      render_piece(board, pos)
+      |> result.unwrap(html.div([], [spot]))
+    },
   ])
 }
 
-pub fn render_rank(board: Board, rank: Rank) -> element.Element(Msg) {
+pub fn render_file(board: Board, file: File) -> element.Element(Msg) {
   html.div(
     [attribute.class("file")],
-    list.map(file.files(), fn(file) {
-      render_square(board, position.Position(rank, file))
+    list.map(rank.ranks() |> list.reverse(), fn(rank) {
+      let p = position.new(file, rank)
+      render_square(board, p)
     }),
   )
 }
 
 pub fn view(model: Model) -> element.Element(Msg) {
-  let board = model
+  let board = model.board
   html.pre(
     [attribute.class("chessboard")],
-    list.map(rank.ranks(), fn(rank) { render_rank(board, rank) }),
+    list.map(file.files() |> list.reverse(), fn(file) {
+      render_file(board, file)
+    }),
   )
 }
 

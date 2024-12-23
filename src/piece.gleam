@@ -10,7 +10,11 @@ pub type PieceKind {
 }
 
 pub type Piece {
-  Piece(team: team.Team, kind: PieceKind)
+  Piece(team: team.Team, kind: PieceKind, selected: Bool)
+}
+
+pub fn new(team: team.Team, kind: PieceKind) -> Piece {
+  Piece(team: team, kind: kind, selected: False)
 }
 
 pub fn to_string(piece: Piece) -> String {
