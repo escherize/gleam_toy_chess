@@ -193,10 +193,10 @@ var Error = class extends Result {
   }
 };
 function isEqual(x, y) {
-  let values2 = [x, y];
-  while (values2.length) {
-    let a = values2.pop();
-    let b = values2.pop();
+  let values3 = [x, y];
+  while (values3.length) {
+    let a = values3.pop();
+    let b = values3.pop();
     if (a === b)
       continue;
     if (!isObject(a) || !isObject(b))
@@ -214,9 +214,9 @@ function isEqual(x, y) {
       } catch {
       }
     }
-    let [keys2, get] = getters(a);
+    let [keys2, get2] = getters(a);
     for (let k of keys2(a)) {
-      values2.push(get(a, k), get(b, k));
+      values3.push(get2(a, k), get2(b, k));
     }
   }
   return true;
@@ -277,178 +277,20 @@ function makeError(variant, module, line, fn, message, extra) {
   return error;
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/order.mjs
-var Lt = class extends CustomType {
-};
-var Eq = class extends CustomType {
-};
-var Gt = class extends CustomType {
-};
-
 // build/dev/javascript/gleam_stdlib/gleam/option.mjs
 var None = class extends CustomType {
 };
 
-// build/dev/javascript/gleam_stdlib/gleam/dict.mjs
-function insert(dict2, key, value) {
-  return map_insert(key, value, dict2);
-}
-function reverse_and_concat(loop$remaining, loop$accumulator) {
-  while (true) {
-    let remaining = loop$remaining;
-    let accumulator = loop$accumulator;
-    if (remaining.hasLength(0)) {
-      return accumulator;
-    } else {
-      let item = remaining.head;
-      let rest = remaining.tail;
-      loop$remaining = rest;
-      loop$accumulator = prepend(item, accumulator);
-    }
-  }
-}
-function do_keys_loop(loop$list, loop$acc) {
-  while (true) {
-    let list2 = loop$list;
-    let acc = loop$acc;
-    if (list2.hasLength(0)) {
-      return reverse_and_concat(acc, toList([]));
-    } else {
-      let first2 = list2.head;
-      let rest = list2.tail;
-      loop$list = rest;
-      loop$acc = prepend(first2[0], acc);
-    }
-  }
-}
-function keys(dict2) {
-  let list_of_pairs = map_to_list(dict2);
-  return do_keys_loop(list_of_pairs, toList([]));
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/list.mjs
-function reverse_loop(loop$remaining, loop$accumulator) {
-  while (true) {
-    let remaining = loop$remaining;
-    let accumulator = loop$accumulator;
-    if (remaining.hasLength(0)) {
-      return accumulator;
-    } else {
-      let item = remaining.head;
-      let rest$1 = remaining.tail;
-      loop$remaining = rest$1;
-      loop$accumulator = prepend(item, accumulator);
-    }
-  }
-}
-function reverse(list2) {
-  return reverse_loop(list2, toList([]));
-}
-function map_loop(loop$list, loop$fun, loop$acc) {
-  while (true) {
-    let list2 = loop$list;
-    let fun = loop$fun;
-    let acc = loop$acc;
-    if (list2.hasLength(0)) {
-      return reverse(acc);
-    } else {
-      let first$1 = list2.head;
-      let rest$1 = list2.tail;
-      loop$list = rest$1;
-      loop$fun = fun;
-      loop$acc = prepend(fun(first$1), acc);
-    }
-  }
-}
-function map(list2, fun) {
-  return map_loop(list2, fun, toList([]));
-}
-function fold(loop$list, loop$initial, loop$fun) {
-  while (true) {
-    let list2 = loop$list;
-    let initial = loop$initial;
-    let fun = loop$fun;
-    if (list2.hasLength(0)) {
-      return initial;
-    } else {
-      let x = list2.head;
-      let rest$1 = list2.tail;
-      loop$list = rest$1;
-      loop$initial = fun(initial, x);
-      loop$fun = fun;
-    }
-  }
-}
-function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
-  while (true) {
-    let over = loop$over;
-    let acc = loop$acc;
-    let with$ = loop$with;
-    let index2 = loop$index;
-    if (over.hasLength(0)) {
-      return acc;
-    } else {
-      let first$1 = over.head;
-      let rest$1 = over.tail;
-      loop$over = rest$1;
-      loop$acc = with$(acc, first$1, index2);
-      loop$with = with$;
-      loop$index = index2 + 1;
-    }
-  }
-}
-function index_fold(list2, initial, fun) {
-  return index_fold_loop(list2, initial, fun, 0);
-}
-function range_loop(loop$start, loop$stop, loop$acc) {
-  while (true) {
-    let start3 = loop$start;
-    let stop = loop$stop;
-    let acc = loop$acc;
-    let $ = compare2(start3, stop);
-    if ($ instanceof Eq) {
-      return prepend(stop, acc);
-    } else if ($ instanceof Gt) {
-      loop$start = start3;
-      loop$stop = stop + 1;
-      loop$acc = prepend(stop, acc);
-    } else {
-      loop$start = start3;
-      loop$stop = stop - 1;
-      loop$acc = prepend(stop, acc);
-    }
-  }
-}
-function range(start3, stop) {
-  return range_loop(start3, stop, toList([]));
-}
-
-// build/dev/javascript/gleam_stdlib/gleam/string.mjs
-function drop_start(loop$string, loop$num_graphemes) {
-  while (true) {
-    let string2 = loop$string;
-    let num_graphemes = loop$num_graphemes;
-    let $ = num_graphemes > 0;
-    if (!$) {
-      return string2;
-    } else {
-      let $1 = pop_grapheme(string2);
-      if ($1.isOk()) {
-        let string$1 = $1[0][1];
-        loop$string = string$1;
-        loop$num_graphemes = num_graphemes - 1;
-      } else {
-        return string2;
-      }
-    }
-  }
-}
-function inspect2(term) {
-  let _pipe = inspect(term);
-  return identity(_pipe);
-}
-
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
+function map_error(result, fun) {
+  if (result.isOk()) {
+    let x = result[0];
+    return new Ok(x);
+  } else {
+    let error = result[0];
+    return new Error(fun(error));
+  }
+}
 function try$(result, fun) {
   if (result.isOk()) {
     let x = result[0];
@@ -456,6 +298,14 @@ function try$(result, fun) {
   } else {
     let e = result[0];
     return new Error(e);
+  }
+}
+function unwrap(result, default$) {
+  if (result.isOk()) {
+    let v = result[0];
+    return v;
+  } else {
+    return default$;
   }
 }
 
@@ -1195,15 +1045,15 @@ function graphemes_iterator(string2) {
   }
 }
 function pop_grapheme(string2) {
-  let first2;
+  let first3;
   const iterator = graphemes_iterator(string2);
   if (iterator) {
-    first2 = iterator.next().value?.segment;
+    first3 = iterator.next().value?.segment;
   } else {
-    first2 = string2.match(/./su)?.[0];
+    first3 = string2.match(/./su)?.[0];
   }
-  if (first2) {
-    return new Ok([first2, string2.slice(first2.length)]);
+  if (first3) {
+    return new Ok([first3, string2.slice(first3.length)]);
   } else {
     return new Error(Nil);
   }
@@ -1333,12 +1183,12 @@ function inspectString(str) {
 }
 function inspectDict(map4) {
   let body = "dict.from_list([";
-  let first2 = true;
+  let first3 = true;
   map4.forEach((value, key) => {
-    if (!first2)
+    if (!first3)
       body = body + ", ";
     body = body + "#(" + inspect(key) + ", " + inspect(value) + ")";
-    first2 = false;
+    first3 = false;
   });
   return body + "])";
 }
@@ -1369,19 +1219,141 @@ function inspectUtfCodepoint(codepoint2) {
   return `//utfcodepoint(${String.fromCodePoint(codepoint2.value)})`;
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/int.mjs
-function compare2(a, b) {
-  let $ = a === b;
-  if ($) {
-    return new Eq();
-  } else {
-    let $1 = a < b;
-    if ($1) {
-      return new Lt();
+// build/dev/javascript/gleam_stdlib/gleam/dict.mjs
+function insert(dict2, key, value) {
+  return map_insert(key, value, dict2);
+}
+function reverse_and_concat(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
     } else {
-      return new Gt();
+      let item = remaining.head;
+      let rest = remaining.tail;
+      loop$remaining = rest;
+      loop$accumulator = prepend(item, accumulator);
     }
   }
+}
+function do_keys_loop(loop$list, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse_and_concat(acc, toList([]));
+    } else {
+      let first3 = list2.head;
+      let rest = list2.tail;
+      loop$list = rest;
+      loop$acc = prepend(first3[0], acc);
+    }
+  }
+}
+function keys(dict2) {
+  let list_of_pairs = map_to_list(dict2);
+  return do_keys_loop(list_of_pairs, toList([]));
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/list.mjs
+function reverse_loop(loop$remaining, loop$accumulator) {
+  while (true) {
+    let remaining = loop$remaining;
+    let accumulator = loop$accumulator;
+    if (remaining.hasLength(0)) {
+      return accumulator;
+    } else {
+      let item = remaining.head;
+      let rest$1 = remaining.tail;
+      loop$remaining = rest$1;
+      loop$accumulator = prepend(item, accumulator);
+    }
+  }
+}
+function reverse(list2) {
+  return reverse_loop(list2, toList([]));
+}
+function map_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = prepend(fun(first$1), acc);
+    }
+  }
+}
+function map(list2, fun) {
+  return map_loop(list2, fun, toList([]));
+}
+function fold(loop$list, loop$initial, loop$fun) {
+  while (true) {
+    let list2 = loop$list;
+    let initial = loop$initial;
+    let fun = loop$fun;
+    if (list2.hasLength(0)) {
+      return initial;
+    } else {
+      let x = list2.head;
+      let rest$1 = list2.tail;
+      loop$list = rest$1;
+      loop$initial = fun(initial, x);
+      loop$fun = fun;
+    }
+  }
+}
+function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
+  while (true) {
+    let over = loop$over;
+    let acc = loop$acc;
+    let with$ = loop$with;
+    let index2 = loop$index;
+    if (over.hasLength(0)) {
+      return acc;
+    } else {
+      let first$1 = over.head;
+      let rest$1 = over.tail;
+      loop$over = rest$1;
+      loop$acc = with$(acc, first$1, index2);
+      loop$with = with$;
+      loop$index = index2 + 1;
+    }
+  }
+}
+function index_fold(list2, initial, fun) {
+  return index_fold_loop(list2, initial, fun, 0);
+}
+
+// build/dev/javascript/gleam_stdlib/gleam/string.mjs
+function drop_start(loop$string, loop$num_graphemes) {
+  while (true) {
+    let string2 = loop$string;
+    let num_graphemes = loop$num_graphemes;
+    let $ = num_graphemes > 0;
+    if (!$) {
+      return string2;
+    } else {
+      let $1 = pop_grapheme(string2);
+      if ($1.isOk()) {
+        let string$1 = $1[0][1];
+        loop$string = string$1;
+        loop$num_graphemes = num_graphemes - 1;
+      } else {
+        return string2;
+      }
+    }
+  }
+}
+function inspect2(term) {
+  let _pipe = inspect(term);
+  return identity(_pipe);
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/io.mjs
@@ -1445,6 +1417,13 @@ var Attribute = class extends CustomType {
     this.as_property = as_property;
   }
 };
+var Event = class extends CustomType {
+  constructor(x0, x1) {
+    super();
+    this[0] = x0;
+    this[1] = x1;
+  }
+};
 function attribute_to_event_handler(attribute2) {
   if (attribute2 instanceof Attribute) {
     return new Error(void 0);
@@ -1505,6 +1484,9 @@ function handlers(element2) {
 // build/dev/javascript/lustre/lustre/attribute.mjs
 function attribute(name, value) {
   return new Attribute(name, identity(value), false);
+}
+function on(name, handler) {
+  return new Event("on" + name, handler);
 }
 function style(properties) {
   return attribute(
@@ -2261,9 +2243,6 @@ function start2(app, selector, flags) {
 }
 
 // build/dev/javascript/lustre/lustre/element/html.mjs
-function text2(content) {
-  return text(content);
-}
 function div(attrs, children2) {
   return element("div", attrs, children2);
 }
@@ -2272,6 +2251,16 @@ function pre(attrs, children2) {
 }
 function span(attrs, children2) {
   return element("span", attrs, children2);
+}
+
+// build/dev/javascript/lustre/lustre/event.mjs
+function on2(name, handler) {
+  return on(name, handler);
+}
+function on_click(msg) {
+  return on2("click", (_) => {
+    return new Ok(msg);
+  });
 }
 
 // build/dev/javascript/app/file.mjs
@@ -2322,6 +2311,25 @@ function to_int(f) {
     return 8;
   }
 }
+function to_string2(f) {
+  if (f instanceof A) {
+    return "A";
+  } else if (f instanceof B) {
+    return "B";
+  } else if (f instanceof C) {
+    return "C";
+  } else if (f instanceof D) {
+    return "D";
+  } else if (f instanceof E) {
+    return "E";
+  } else if (f instanceof F) {
+    return "F";
+  } else if (f instanceof G) {
+    return "G";
+  } else {
+    return "H";
+  }
+}
 
 // build/dev/javascript/app/team.mjs
 var White = class extends CustomType {
@@ -2343,13 +2351,17 @@ var Queen = class extends CustomType {
 var King = class extends CustomType {
 };
 var Piece = class extends CustomType {
-  constructor(team, kind) {
+  constructor(team, kind, selected) {
     super();
     this.team = team;
     this.kind = kind;
+    this.selected = selected;
   }
 };
-function to_string2(piece) {
+function new$3(team, kind) {
+  return new Piece(team, kind, false);
+}
+function to_string3(piece) {
   let $ = piece.kind;
   if ($ instanceof Pawn) {
     return "\u265F";
@@ -2373,26 +2385,25 @@ var Rank = class extends CustomType {
     this[0] = x0;
   }
 };
-function from_int(i) {
+function new$4(i) {
   if (i === 1) {
-    return new Rank(1);
+    return new Ok(new Rank(i));
   } else if (i === 2) {
-    return new Rank(2);
+    return new Ok(new Rank(i));
   } else if (i === 3) {
-    return new Rank(3);
+    return new Ok(new Rank(i));
   } else if (i === 4) {
-    return new Rank(4);
+    return new Ok(new Rank(i));
   } else if (i === 5) {
-    return new Rank(5);
+    return new Ok(new Rank(i));
   } else if (i === 6) {
-    return new Rank(6);
+    return new Ok(new Rank(i));
   } else if (i === 7) {
-    return new Rank(7);
+    return new Ok(new Rank(i));
   } else if (i === 8) {
-    return new Rank(8);
+    return new Ok(new Rank(i));
   } else {
-    debug(["rank/from_int", i]);
-    throw makeError("panic", "rank", 19, "from_int", "Invalid rank!", {});
+    return new Error("invalid input to rank/new: " + to_string(i));
   }
 }
 function to_int2(rank) {
@@ -2400,6 +2411,11 @@ function to_int2(rank) {
     let i = rank[0];
     return i;
   }
+}
+function to_string4(rank) {
+  let _pipe = rank;
+  let _pipe$1 = to_int2(_pipe);
+  return to_string(_pipe$1);
 }
 function ranks() {
   return toList([
@@ -2416,131 +2432,223 @@ function ranks() {
 
 // build/dev/javascript/app/position.mjs
 var Position = class extends CustomType {
-  constructor(rank, file) {
+  constructor(file, rank) {
     super();
-    this.rank = rank;
     this.file = file;
+    this.rank = rank;
   }
 };
+function new$5(file, rank) {
+  if (rank.isOk() && file.isOk()) {
+    let r = rank[0];
+    let f = file[0];
+    return new Ok(new Position(f, r));
+  } else if (rank.isOk()) {
+    return new Error("Invalid rank");
+  } else if (file.isOk()) {
+    return new Error("Invalid file");
+  } else {
+    return new Error("Invalid rank and file");
+  }
+}
+function to_string5(p) {
+  return to_string2(p.file) + to_string4(p.rank);
+}
 
 // build/dev/javascript/app/board.mjs
-function insert_starting_row(b, f, t) {
+function starting_row(b, r, t) {
   let _pipe = b;
   let _pipe$1 = insert(
     _pipe,
-    new Position(from_int(1), f),
-    new Piece(t, new Rook())
+    new Position(new A(), r),
+    new$3(t, new Rook())
   );
   let _pipe$2 = insert(
     _pipe$1,
-    new Position(from_int(2), f),
-    new Piece(t, new Knight())
+    new Position(new B(), r),
+    new$3(t, new Knight())
   );
   let _pipe$3 = insert(
     _pipe$2,
-    new Position(from_int(3), f),
-    new Piece(t, new Bishop())
+    new Position(new C(), r),
+    new$3(t, new Bishop())
   );
   let _pipe$4 = insert(
     _pipe$3,
-    new Position(from_int(4), f),
-    new Piece(t, new Queen())
+    new Position(new D(), r),
+    new$3(t, new Queen())
   );
   let _pipe$5 = insert(
     _pipe$4,
-    new Position(from_int(5), f),
-    new Piece(t, new King())
+    new Position(new E(), r),
+    new$3(t, new King())
   );
   let _pipe$6 = insert(
     _pipe$5,
-    new Position(from_int(6), f),
-    new Piece(t, new Bishop())
+    new Position(new F(), r),
+    new$3(t, new Bishop())
   );
   let _pipe$7 = insert(
     _pipe$6,
-    new Position(from_int(7), f),
-    new Piece(t, new Knight())
+    new Position(new G(), r),
+    new$3(t, new Knight())
   );
   return insert(
     _pipe$7,
-    new Position(from_int(8), f),
-    new Piece(t, new Rook())
+    new Position(new H(), r),
+    new$3(t, new Rook())
   );
 }
-function insert_pawn_row(board, f, t) {
-  let files2 = (() => {
-    let _pipe = range(1, 8);
-    return map(_pipe, (_capture) => {
-      return from_int(_capture);
-    });
-  })();
+function starting_pawns(board, r, t) {
   return fold(
-    files2,
+    files(),
     board,
-    (b, rank) => {
+    (b, f) => {
       return insert(
         b,
-        new Position(rank, f),
-        new Piece(t, new Pawn())
+        new Position(f, r),
+        new$3(t, new Pawn())
       );
     }
   );
 }
 function new_board() {
-  let board = new_map();
-  let _pipe = board;
-  let _pipe$1 = insert_starting_row(_pipe, new A(), new White());
-  let _pipe$2 = insert_starting_row(_pipe$1, new H(), new Black());
-  let _pipe$3 = insert_pawn_row(_pipe$2, new B(), new White());
-  return insert_pawn_row(_pipe$3, new G(), new Black());
+  let $ = new$4(1);
+  if (!$.isOk()) {
+    throw makeError(
+      "let_assert",
+      "board",
+      32,
+      "new_board",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $ }
+    );
+  }
+  let white_start = $[0];
+  let $1 = new$4(8);
+  if (!$1.isOk()) {
+    throw makeError(
+      "let_assert",
+      "board",
+      33,
+      "new_board",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $1 }
+    );
+  }
+  let black_start = $1[0];
+  let $2 = new$4(2);
+  if (!$2.isOk()) {
+    throw makeError(
+      "let_assert",
+      "board",
+      34,
+      "new_board",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $2 }
+    );
+  }
+  let white_pawns = $2[0];
+  let $3 = new$4(7);
+  if (!$3.isOk()) {
+    throw makeError(
+      "let_assert",
+      "board",
+      35,
+      "new_board",
+      "Pattern match failed, no pattern matched the value.",
+      { value: $3 }
+    );
+  }
+  let black_pawns = $3[0];
+  let _pipe = new_map();
+  let _pipe$1 = starting_row(_pipe, white_start, new White());
+  let _pipe$2 = starting_pawns(_pipe$1, white_pawns, new White());
+  let _pipe$3 = starting_row(_pipe$2, black_start, new Black());
+  return starting_pawns(_pipe$3, black_pawns, new Black());
 }
-function board_get(board, position) {
-  return map_get(board, position);
+function get(board, position) {
+  let _pipe = map_get(board, position);
+  return map_error(_pipe, (_) => {
+    return "No piece at position";
+  });
+}
+
+// build/dev/javascript/app/game.mjs
+var Game = class extends CustomType {
+  constructor(board, team_turn, check, winner) {
+    super();
+    this.board = board;
+    this.team_turn = team_turn;
+    this.check = check;
+    this.winner = winner;
+  }
+};
+function new$6() {
+  return new Game(new_board(), new White(), new None(), new None());
 }
 
 // build/dev/javascript/app/render.mjs
-var Light = class extends CustomType {
-};
-var Dark = class extends CustomType {
-};
 function bg_color(p) {
   let $ = remainderInt(to_int2(p.rank) + to_int(p.file), 2) === 0;
   if ($) {
-    return new Dark();
+    return "dark";
   } else {
-    return new Light();
+    return "light";
   }
 }
 
 // build/dev/javascript/app/app.mjs
+var UserClicked = class extends CustomType {
+  constructor(x0) {
+    super();
+    this[0] = x0;
+  }
+};
 function init2(_) {
-  return new_board();
+  return new$6();
 }
-function update(model, _) {
-  return model;
+function handle_click(model, pos) {
+  let board = model.board;
+  let $ = get(board, pos);
+  if ($.isOk()) {
+    let piece = $[0];
+    debug(["Clicked:", piece, to_string3(piece)]);
+    return model;
+  } else {
+    return model;
+  }
+}
+function update(model, msg) {
+  {
+    let pos = msg[0];
+    return handle_click(model, pos);
+  }
 }
 function render_piece(board, pos) {
   return try$(
-    board_get(board, pos),
+    get(board, pos),
     (piece) => {
       let piece_color = (() => {
         let $ = piece.team;
         if ($ instanceof White) {
-          return "#0f0";
+          return "#eee";
         } else {
-          return "#fff";
+          return "#111";
         }
       })();
       return new Ok(
         div(
           toList([
+            on_click(new UserClicked(pos)),
             class$("square"),
+            class$("piece"),
             style(toList([["color", piece_color]]))
           ]),
           toList([
             span(
               toList([style(toList([["cursor", "grab"]]))]),
-              toList([text(to_string2(piece))])
+              toList([text(to_string3(piece))])
             )
           ])
         )
@@ -2549,49 +2657,62 @@ function render_piece(board, pos) {
   );
 }
 function render_square(board, pos) {
-  let bg_class = class$(
-    (() => {
-      let $ = bg_color(pos);
-      if ($ instanceof Dark) {
-        return "dark";
-      } else {
-        return "light";
-      }
-    })()
-  );
   return div(
-    toList([bg_class]),
+    toList([
+      class$("square"),
+      class$(bg_color(pos))
+    ]),
     toList([
       (() => {
-        let $ = render_piece(board, pos);
-        if ($.isOk()) {
-          let element2 = $[0];
-          return element2;
-        } else {
-          return div(toList([]), toList([text2(" ")]));
-        }
+        let spot = div(
+          toList([style(toList([["font-size", "20px"]]))]),
+          toList([text(to_string5(pos))])
+        );
+        let _pipe = render_piece(board, pos);
+        return unwrap(_pipe, div(toList([]), toList([spot])));
       })()
     ])
   );
 }
-function render_rank(board, rank) {
+function render_file(board, file) {
   return div(
     toList([class$("file")]),
     map(
-      files(),
-      (file) => {
-        return render_square(board, new Position(rank, file));
+      (() => {
+        let _pipe = ranks();
+        return reverse(_pipe);
+      })(),
+      (rank) => {
+        let $ = new$5(new Ok(file), new Ok(rank));
+        if (!$.isOk()) {
+          throw makeError(
+            "let_assert",
+            "app",
+            97,
+            "",
+            "Pattern match failed, no pattern matched the value.",
+            { value: $ }
+          );
+        }
+        let p = $[0];
+        return render_square(board, p);
       }
     )
   );
 }
 function view(model) {
-  let board = model;
+  let board = model.board;
   return pre(
     toList([class$("chessboard")]),
-    map(ranks(), (rank) => {
-      return render_rank(board, rank);
-    })
+    map(
+      (() => {
+        let _pipe = files();
+        return reverse(_pipe);
+      })(),
+      (file) => {
+        return render_file(board, file);
+      }
+    )
   );
 }
 function main() {
@@ -2601,7 +2722,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      89,
+      115,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

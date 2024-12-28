@@ -1,5 +1,4 @@
 import file.{A}
-import gleeunit
 import gleeunit/should
 import position
 import rank
@@ -8,6 +7,8 @@ import rank
 pub fn parse_string_test() {
   position.parse("A1")
   |> should.be_ok
-  |> should.equal(position.new(A, rank.new(1)))
+
+  position.parse("A1")
+  |> should.equal(position.new(Ok(A), rank.new(1)))
 }
 // TODO: it goes FILE then RANK !!!

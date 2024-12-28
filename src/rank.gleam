@@ -1,17 +1,14 @@
 import gleam/int
-import gleam/io
-import gleam/result
 
 pub opaque type Rank {
   Rank(Int)
 }
 
-pub fn new(i: Int) -> Rank {
+pub fn new(i: Int) -> Result(Rank, String) {
   case i {
-    1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 -> Rank(i)
+    1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 -> Ok(Rank(i))
     _ -> {
-      io.debug(#("rank/new", i))
-      panic as "Invalid rank!"
+      Error("invalid input to rank/new: " <> int.to_string(i))
     }
   }
 }

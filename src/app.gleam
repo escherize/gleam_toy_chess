@@ -1,12 +1,14 @@
 import board.{type Board}
 import file.{type File}
 import game.{type Game}
+import gleam/io
 import gleam/list
 import gleam/result
 import lustre
 import lustre/attribute
 import lustre/element
 import lustre/element/html
+import lustre/event.{on_click}
 import piece
 import position
 import rank.{type Rank}
@@ -28,6 +30,7 @@ pub fn handle_click(model: Model, pos: position.Position) -> Model {
   let board = model.board
   case board.get(board, pos) {
     Ok(piece) -> {
+      io.debug(#("Clicked:", piece, piece.to_string(piece)))
       // todo: implement piece selected
       model
     }
@@ -48,7 +51,7 @@ pub fn update(model: Model, msg: Msg) -> Model {
 pub fn render_piece(
   board: Board,
   pos: position.Position,
-) -> Result(element.Element(Msg), Nil) {
+) -> Result(element.Element(Msg), String) {
   use piece <- result.try(board.get(board, pos))
   let piece_color = case piece.team {
     White -> "#eee"
@@ -57,6 +60,7 @@ pub fn render_piece(
   Ok(
     html.div(
       [
+        on_click(UserClicked(pos)),
         attribute.class("square"),
         attribute.class("piece"),
         attribute.style([#("color", piece_color)]),
@@ -90,7 +94,7 @@ pub fn render_file(board: Board, file: File) -> element.Element(Msg) {
   html.div(
     [attribute.class("file")],
     list.map(rank.ranks() |> list.reverse(), fn(rank) {
-      let p = position.new(file, rank)
+      let assert Ok(p) = position.new(Ok(file), Ok(rank))
       render_square(board, p)
     }),
   )

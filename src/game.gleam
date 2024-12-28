@@ -1,11 +1,14 @@
 import board
+import coordinate
 import file.{A}
+import gleam/list
 import gleam/option.{type Option, None}
 import gleam/result
 import piece
-import position
+import position.{type Position}
 import rank
 import team
+import util
 
 pub type Game {
   Game(
@@ -25,22 +28,36 @@ pub fn new() -> Game {
   )
 }
 
-pub fn legal_moves(
-  game: Game,
-  pos: position.Position,
-) -> Result(List(position.Position), Nil) {
-  use piece <- result.try(board.get(game.board, pos))
-  case piece.kind {
-    piece.Bishop -> Ok([])
-    piece.King -> Ok([])
-    piece.Knight -> Ok([])
-    piece.Pawn -> {
-     case piece.team {
-       team.Black -> position.(pos)
-       team.White -> todo
-     }
+pub fn king_moves(
+  _board: board.Board,
+  pos: Position,
+  piece: piece.Piece,
+) -> List(Result(Position, String)) {
+  list.map(coordinate.dirs(), fn(step) {
+    coordinate.pos_add(pos, step, piece.team)
+  })
+  // TODO: remove more invalid moves:
+  // - moves that would put the king in check
+  // - moves that would put the king ontop of his own team's piece
+}
+
+pub fn legal_moves(game: Game, pos: Position) -> List(Position) {
+  case board.get(game.board, pos) {
+    Ok(piece) -> {
+      case piece.kind {
+        piece.King -> []
+        //king_moves(game.board, pos, piece)
+        piece.Bishop -> []
+        piece.Knight -> []
+        piece.Pawn -> {
+          [coordinate.pos_add(pos, coordinate.Forward, piece.team)]
+          |> result.values
+        }
+        piece.Queen -> []
+        piece.Rook -> []
+      }
     }
-    piece.Queen -> Ok([])
-    piece.Rook -> Ok([])
+    // no valid moves for empty squares
+    Error(_) -> []
   }
 }

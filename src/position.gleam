@@ -17,27 +17,24 @@ pub fn gen_positions() -> List(Position) {
 }
 
 ///make a new position
-pub fn new(file, rank) -> Position {
-  Position(file, rank)
+pub fn new(file, rank) -> Result(Position, String) {
+  case rank, file {
+    Ok(r), Ok(f) -> Ok(Position(f, r))
+    Ok(_), _ -> Error("Invalid rank")
+    _, Ok(_) -> Error("Invalid file")
+    _, _ -> Error("Invalid rank and file")
+  }
 }
 
 pub fn parse(s: String) -> Result(Position, String) {
   use f_str <- result.try(
     string.first(s) |> result.map_error(fn(_) { "Could not parse file" }),
   )
-  use f <- result.try(file.parse(f_str))
   use r_str <- result.try(
     string.first(string.drop_start(s, 1))
     |> result.map_error(fn(_) { "Could not parse file" }),
   )
-  use r <- result.try(rank.parse(r_str))
-  Ok(new(f, r))
-}
-
-pub fn add(p1: Position, p2: Position) -> Result(Position, String) {
-  use new_file <- result.try(file.add(p1.file, p2.file))
-  use new_rank <- result.try(rank.add(p1.rank, p2.rank))
-  Ok(new(new_file, new_rank))
+  new(file.parse(f_str), rank.parse(r_str))
 }
 
 pub fn to_string(p: Position) -> String {
