@@ -1,9 +1,7 @@
-import file
-import position
-import rank
+import point
 
-pub fn bg_color(p: position.Position) -> String {
-  case { rank.to_int(p.rank) + file.to_int(p.file) } % 2 == 0 {
+pub fn bg_color(p: point.Point) -> String {
+  case { point.x(p) + point.y(p) } % 2 == 0 {
     True -> "dark"
     False -> "light"
   }

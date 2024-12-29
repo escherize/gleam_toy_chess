@@ -192,11 +192,11 @@ var Error = class extends Result {
     return false;
   }
 };
-function isEqual(x, y) {
-  let values3 = [x, y];
-  while (values3.length) {
-    let a = values3.pop();
-    let b = values3.pop();
+function isEqual(x2, y2) {
+  let values2 = [x2, y2];
+  while (values2.length) {
+    let a = values2.pop();
+    let b = values2.pop();
     if (a === b)
       continue;
     if (!isObject(a) || !isObject(b))
@@ -216,17 +216,17 @@ function isEqual(x, y) {
     }
     let [keys2, get2] = getters(a);
     for (let k of keys2(a)) {
-      values3.push(get2(a, k), get2(b, k));
+      values2.push(get2(a, k), get2(b, k));
     }
   }
   return true;
 }
 function getters(object3) {
   if (object3 instanceof Map) {
-    return [(x) => x.keys(), (x, y) => x.get(y)];
+    return [(x2) => x2.keys(), (x2, y2) => x2.get(y2)];
   } else {
     let extra = object3 instanceof globalThis.Error ? ["message"] : [];
-    return [(x) => [...extra, ...Object.keys(x)], (x, y) => x[y]];
+    return [(x2) => [...extra, ...Object.keys(x2)], (x2, y2) => x2[y2]];
   }
 }
 function unequalDates(a, b) {
@@ -281,11 +281,34 @@ function makeError(variant, module, line, fn, message, extra) {
 var None = class extends CustomType {
 };
 
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+var Lt = class extends CustomType {
+};
+var Eq = class extends CustomType {
+};
+var Gt = class extends CustomType {
+};
+
+// build/dev/javascript/gleam_stdlib/gleam/int.mjs
+function compare(a, b) {
+  let $ = a === b;
+  if ($) {
+    return new Eq();
+  } else {
+    let $1 = a < b;
+    if ($1) {
+      return new Lt();
+    } else {
+      return new Gt();
+    }
+  }
+}
+
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
 function map_error(result, fun) {
   if (result.isOk()) {
-    let x = result[0];
-    return new Ok(x);
+    let x2 = result[0];
+    return new Ok(x2);
   } else {
     let error = result[0];
     return new Error(fun(error));
@@ -293,8 +316,8 @@ function map_error(result, fun) {
 }
 function try$(result, fun) {
   if (result.isOk()) {
-    let x = result[0];
-    return fun(x);
+    let x2 = result[0];
+    return fun(x2);
   } else {
     let e = result[0];
     return new Error(e);
@@ -434,13 +457,13 @@ function mask(hash, shift) {
 function bitpos(hash, shift) {
   return 1 << mask(hash, shift);
 }
-function bitcount(x) {
-  x -= x >> 1 & 1431655765;
-  x = (x & 858993459) + (x >> 2 & 858993459);
-  x = x + (x >> 4) & 252645135;
-  x += x >> 8;
-  x += x >> 16;
-  return x & 127;
+function bitcount(x2) {
+  x2 -= x2 >> 1 & 1431655765;
+  x2 = (x2 & 858993459) + (x2 >> 2 & 858993459);
+  x2 = x2 + (x2 >> 4) & 252645135;
+  x2 += x2 >> 8;
+  x2 += x2 >> 16;
+  return x2 & 127;
 }
 function index(bitmap, bit) {
   return bitcount(bitmap & bit - 1);
@@ -1018,8 +1041,8 @@ var unequalDictSymbol = Symbol();
 // build/dev/javascript/gleam_stdlib/gleam_stdlib.mjs
 var Nil = void 0;
 var NOT_FOUND = {};
-function identity(x) {
-  return x;
+function identity(x2) {
+  return x2;
 }
 function to_string(term) {
   return term.toString();
@@ -1045,15 +1068,15 @@ function graphemes_iterator(string2) {
   }
 }
 function pop_grapheme(string2) {
-  let first3;
+  let first2;
   const iterator = graphemes_iterator(string2);
   if (iterator) {
-    first3 = iterator.next().value?.segment;
+    first2 = iterator.next().value?.segment;
   } else {
-    first3 = string2.match(/./su)?.[0];
+    first2 = string2.match(/./su)?.[0];
   }
-  if (first3) {
-    return new Ok([first3, string2.slice(first3.length)]);
+  if (first2) {
+    return new Ok([first2, string2.slice(first2.length)]);
   } else {
     return new Error(Nil);
   }
@@ -1183,12 +1206,12 @@ function inspectString(str) {
 }
 function inspectDict(map4) {
   let body = "dict.from_list([";
-  let first3 = true;
+  let first2 = true;
   map4.forEach((value, key) => {
-    if (!first3)
+    if (!first2)
       body = body + ", ";
     body = body + "#(" + inspect(key) + ", " + inspect(value) + ")";
-    first3 = false;
+    first2 = false;
   });
   return body + "])";
 }
@@ -1244,10 +1267,10 @@ function do_keys_loop(loop$list, loop$acc) {
     if (list2.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let first3 = list2.head;
+      let first2 = list2.head;
       let rest = list2.tail;
       loop$list = rest;
-      loop$acc = prepend(first3[0], acc);
+      loop$acc = prepend(first2[0], acc);
     }
   }
 }
@@ -1301,10 +1324,10 @@ function fold(loop$list, loop$initial, loop$fun) {
     if (list2.hasLength(0)) {
       return initial;
     } else {
-      let x = list2.head;
+      let x2 = list2.head;
       let rest$1 = list2.tail;
       loop$list = rest$1;
-      loop$initial = fun(initial, x);
+      loop$initial = fun(initial, x2);
       loop$fun = fun;
     }
   }
@@ -1329,6 +1352,28 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
 }
 function index_fold(list2, initial, fun) {
   return index_fold_loop(list2, initial, fun, 0);
+}
+function range_loop(loop$start, loop$stop, loop$acc) {
+  while (true) {
+    let start3 = loop$start;
+    let stop = loop$stop;
+    let acc = loop$acc;
+    let $ = compare(start3, stop);
+    if ($ instanceof Eq) {
+      return prepend(stop, acc);
+    } else if ($ instanceof Gt) {
+      loop$start = start3;
+      loop$stop = stop + 1;
+      loop$acc = prepend(stop, acc);
+    } else {
+      loop$start = start3;
+      loop$stop = stop - 1;
+      loop$acc = prepend(stop, acc);
+    }
+  }
+}
+function range(start3, stop) {
+  return range_loop(start3, stop, toList([]));
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/string.mjs
@@ -2263,74 +2308,6 @@ function on_click(msg) {
   });
 }
 
-// build/dev/javascript/app/file.mjs
-var A = class extends CustomType {
-};
-var B = class extends CustomType {
-};
-var C = class extends CustomType {
-};
-var D = class extends CustomType {
-};
-var E = class extends CustomType {
-};
-var F = class extends CustomType {
-};
-var G = class extends CustomType {
-};
-var H = class extends CustomType {
-};
-function files() {
-  return toList([
-    new H(),
-    new G(),
-    new F(),
-    new E(),
-    new D(),
-    new C(),
-    new B(),
-    new A()
-  ]);
-}
-function to_int(f) {
-  if (f instanceof A) {
-    return 1;
-  } else if (f instanceof B) {
-    return 2;
-  } else if (f instanceof C) {
-    return 3;
-  } else if (f instanceof D) {
-    return 4;
-  } else if (f instanceof E) {
-    return 5;
-  } else if (f instanceof F) {
-    return 6;
-  } else if (f instanceof G) {
-    return 7;
-  } else {
-    return 8;
-  }
-}
-function to_string2(f) {
-  if (f instanceof A) {
-    return "A";
-  } else if (f instanceof B) {
-    return "B";
-  } else if (f instanceof C) {
-    return "C";
-  } else if (f instanceof D) {
-    return "D";
-  } else if (f instanceof E) {
-    return "E";
-  } else if (f instanceof F) {
-    return "F";
-  } else if (f instanceof G) {
-    return "G";
-  } else {
-    return "H";
-  }
-}
-
 // build/dev/javascript/app/team.mjs
 var White = class extends CustomType {
 };
@@ -2361,7 +2338,7 @@ var Piece = class extends CustomType {
 function new$3(team, kind) {
   return new Piece(team, kind, false);
 }
-function to_string3(piece) {
+function to_string2(piece) {
   let $ = piece.kind;
   if ($ instanceof Pawn) {
     return "\u265F";
@@ -2378,81 +2355,81 @@ function to_string3(piece) {
   }
 }
 
-// build/dev/javascript/app/rank.mjs
-var Rank = class extends CustomType {
-  constructor(x0) {
-    super();
-    this[0] = x0;
-  }
-};
-function new$4(i) {
-  if (i === 1) {
-    return new Ok(new Rank(i));
-  } else if (i === 2) {
-    return new Ok(new Rank(i));
-  } else if (i === 3) {
-    return new Ok(new Rank(i));
-  } else if (i === 4) {
-    return new Ok(new Rank(i));
-  } else if (i === 5) {
-    return new Ok(new Rank(i));
-  } else if (i === 6) {
-    return new Ok(new Rank(i));
-  } else if (i === 7) {
-    return new Ok(new Rank(i));
-  } else if (i === 8) {
-    return new Ok(new Rank(i));
-  } else {
-    return new Error("invalid input to rank/new: " + to_string(i));
-  }
-}
-function to_int2(rank) {
-  {
-    let i = rank[0];
-    return i;
-  }
-}
-function to_string4(rank) {
-  let _pipe = rank;
-  let _pipe$1 = to_int2(_pipe);
-  return to_string(_pipe$1);
-}
-function ranks() {
-  return toList([
-    new Rank(1),
-    new Rank(2),
-    new Rank(3),
-    new Rank(4),
-    new Rank(5),
-    new Rank(6),
-    new Rank(7),
-    new Rank(8)
-  ]);
-}
-
-// build/dev/javascript/app/position.mjs
-var Position = class extends CustomType {
+// build/dev/javascript/app/point.mjs
+var Point = class extends CustomType {
   constructor(file, rank) {
     super();
     this.file = file;
     this.rank = rank;
   }
 };
-function new$5(file, rank) {
-  if (rank.isOk() && file.isOk()) {
-    let r = rank[0];
-    let f = file[0];
-    return new Ok(new Position(f, r));
-  } else if (rank.isOk()) {
-    return new Error("Invalid rank");
-  } else if (file.isOk()) {
-    return new Error("Invalid file");
+function x(p) {
+  return p.file;
+}
+function y(p) {
+  return p.rank;
+}
+function indexes() {
+  return range(1, 8);
+}
+function new$4(rank, file) {
+  let $ = rank >= 1;
+  let $1 = rank <= 8;
+  let $2 = file >= 1;
+  let $3 = file <= 8;
+  if ($ && $1 && $2 && $3) {
+    return new Ok(new Point(rank, file));
   } else {
-    return new Error("Invalid rank and file");
+    return new Error(
+      "invalid coordinate:" + to_string(rank) + ", " + to_string(
+        file
+      )
+    );
   }
 }
-function to_string5(p) {
-  return to_string2(p.file) + to_string4(p.rank);
+function new_ok(rank, file) {
+  let $ = new$4(rank, file);
+  if ($.isOk()) {
+    let p = $[0];
+    return p;
+  } else {
+    throw makeError(
+      "panic",
+      "point",
+      64,
+      "new_ok",
+      "uh oh, new_ok failed. ",
+      {}
+    );
+  }
+}
+function file_str(p) {
+  let $ = p.rank;
+  if ($ === 1) {
+    return "A";
+  } else if ($ === 2) {
+    return "B";
+  } else if ($ === 3) {
+    return "C";
+  } else if ($ === 4) {
+    return "D";
+  } else if ($ === 5) {
+    return "E";
+  } else if ($ === 6) {
+    return "F";
+  } else if ($ === 7) {
+    return "G";
+  } else if ($ === 8) {
+    return "H";
+  } else {
+    throw makeError("panic", "point", 84, "file_str", "impossible", {});
+  }
+}
+function rank_str(p) {
+  return to_string(p.file);
+}
+function to_string3(p) {
+  return rank_str(p) + file_str(p);
 }
 
 // build/dev/javascript/app/board.mjs
@@ -2460,112 +2437,75 @@ function starting_row(b, r, t) {
   let _pipe = b;
   let _pipe$1 = insert(
     _pipe,
-    new Position(new A(), r),
+    new_ok(r, 1),
     new$3(t, new Rook())
   );
   let _pipe$2 = insert(
     _pipe$1,
-    new Position(new B(), r),
+    new_ok(r, 2),
     new$3(t, new Knight())
   );
   let _pipe$3 = insert(
     _pipe$2,
-    new Position(new C(), r),
+    new_ok(r, 3),
     new$3(t, new Bishop())
   );
   let _pipe$4 = insert(
     _pipe$3,
-    new Position(new D(), r),
+    new_ok(r, 4),
     new$3(t, new Queen())
   );
   let _pipe$5 = insert(
     _pipe$4,
-    new Position(new E(), r),
+    new_ok(r, 5),
     new$3(t, new King())
   );
   let _pipe$6 = insert(
     _pipe$5,
-    new Position(new F(), r),
+    new_ok(r, 6),
     new$3(t, new Bishop())
   );
   let _pipe$7 = insert(
     _pipe$6,
-    new Position(new G(), r),
+    new_ok(r, 7),
     new$3(t, new Knight())
   );
   return insert(
     _pipe$7,
-    new Position(new H(), r),
+    new_ok(r, 8),
     new$3(t, new Rook())
   );
 }
 function starting_pawns(board, r, t) {
+  let _pipe = indexes();
+  debug(_pipe);
   return fold(
-    files(),
+    indexes(),
     board,
     (b, f) => {
-      return insert(
-        b,
-        new Position(f, r),
-        new$3(t, new Pawn())
-      );
+      debug([r, f]);
+      let $ = new$4(r, f);
+      if (!$.isOk()) {
+        throw makeError(
+          "let_assert",
+          "board",
+          28,
+          "",
+          "Pattern match failed, no pattern matched the value.",
+          { value: $ }
+        );
+      }
+      let point = $[0];
+      return insert(b, point, new$3(t, new Pawn()));
     }
   );
 }
 function new_board() {
-  let $ = new$4(1);
-  if (!$.isOk()) {
-    throw makeError(
-      "let_assert",
-      "board",
-      32,
-      "new_board",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $ }
-    );
-  }
-  let white_start = $[0];
-  let $1 = new$4(8);
-  if (!$1.isOk()) {
-    throw makeError(
-      "let_assert",
-      "board",
-      33,
-      "new_board",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $1 }
-    );
-  }
-  let black_start = $1[0];
-  let $2 = new$4(2);
-  if (!$2.isOk()) {
-    throw makeError(
-      "let_assert",
-      "board",
-      34,
-      "new_board",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $2 }
-    );
-  }
-  let white_pawns = $2[0];
-  let $3 = new$4(7);
-  if (!$3.isOk()) {
-    throw makeError(
-      "let_assert",
-      "board",
-      35,
-      "new_board",
-      "Pattern match failed, no pattern matched the value.",
-      { value: $3 }
-    );
-  }
-  let black_pawns = $3[0];
   let _pipe = new_map();
-  let _pipe$1 = starting_row(_pipe, white_start, new White());
-  let _pipe$2 = starting_pawns(_pipe$1, white_pawns, new White());
-  let _pipe$3 = starting_row(_pipe$2, black_start, new Black());
-  return starting_pawns(_pipe$3, black_pawns, new Black());
+  let _pipe$1 = starting_row(_pipe, 1, new White());
+  let _pipe$2 = starting_pawns(_pipe$1, 2, new White());
+  let _pipe$3 = starting_row(_pipe$2, 8, new Black());
+  return starting_pawns(_pipe$3, 7, new Black());
 }
 function get(board, position) {
   let _pipe = map_get(board, position);
@@ -2584,13 +2524,13 @@ var Game = class extends CustomType {
     this.winner = winner;
   }
 };
-function new$6() {
+function new$5() {
   return new Game(new_board(), new White(), new None(), new None());
 }
 
 // build/dev/javascript/app/render.mjs
 function bg_color(p) {
-  let $ = remainderInt(to_int2(p.rank) + to_int(p.file), 2) === 0;
+  let $ = remainderInt(x(p) + y(p), 2) === 0;
   if ($) {
     return "dark";
   } else {
@@ -2606,14 +2546,14 @@ var UserClicked = class extends CustomType {
   }
 };
 function init2(_) {
-  return new$6();
+  return new$5();
 }
 function handle_click(model, pos) {
   let board = model.board;
   let $ = get(board, pos);
   if ($.isOk()) {
     let piece = $[0];
-    debug(["Clicked:", piece, to_string3(piece)]);
+    debug(["Clicked:", piece, to_string2(piece)]);
     return model;
   } else {
     return model;
@@ -2648,7 +2588,7 @@ function render_piece(board, pos) {
           toList([
             span(
               toList([style(toList([["cursor", "grab"]]))]),
-              toList([text(to_string3(piece))])
+              toList([text(to_string2(piece))])
             )
           ])
         )
@@ -2666,7 +2606,7 @@ function render_square(board, pos) {
       (() => {
         let spot = div(
           toList([style(toList([["font-size", "20px"]]))]),
-          toList([text(to_string5(pos))])
+          toList([text(to_string3(pos))])
         );
         let _pipe = render_piece(board, pos);
         return unwrap(_pipe, div(toList([]), toList([spot])));
@@ -2674,21 +2614,21 @@ function render_square(board, pos) {
     ])
   );
 }
-function render_file(board, file) {
+function render_row(board, col) {
   return div(
     toList([class$("file")]),
     map(
       (() => {
-        let _pipe = ranks();
+        let _pipe = indexes();
         return reverse(_pipe);
       })(),
-      (rank) => {
-        let $ = new$5(new Ok(file), new Ok(rank));
+      (row) => {
+        let $ = new$4(col, row);
         if (!$.isOk()) {
           throw makeError(
             "let_assert",
             "app",
-            97,
+            93,
             "",
             "Pattern match failed, no pattern matched the value.",
             { value: $ }
@@ -2706,11 +2646,11 @@ function view(model) {
     toList([class$("chessboard")]),
     map(
       (() => {
-        let _pipe = files();
+        let _pipe = indexes();
         return reverse(_pipe);
       })(),
-      (file) => {
-        return render_file(board, file);
+      (col) => {
+        return render_row(board, col);
       }
     )
   );
@@ -2722,7 +2662,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      115,
+      111,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

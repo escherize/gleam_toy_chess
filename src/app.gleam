@@ -1,5 +1,4 @@
 import board.{type Board}
-import file.{type File}
 import game.{type Game}
 import gleam/io
 import gleam/list
@@ -10,8 +9,8 @@ import lustre/element
 import lustre/element/html
 import lustre/event.{on_click}
 import piece
-import position
-import rank.{type Rank}
+import point
+
 import render
 import team.{Black, White}
 
@@ -23,10 +22,10 @@ fn init(_flags) -> Model {
 }
 
 pub type Msg {
-  UserClicked(position.Position)
+  UserClicked(point.Point)
 }
 
-pub fn handle_click(model: Model, pos: position.Position) -> Model {
+pub fn handle_click(model: Model, pos: point.Point) -> Model {
   let board = model.board
   case board.get(board, pos) {
     Ok(piece) -> {
@@ -50,7 +49,7 @@ pub fn update(model: Model, msg: Msg) -> Model {
 
 pub fn render_piece(
   board: Board,
-  pos: position.Position,
+  pos: point.Point,
 ) -> Result(element.Element(Msg), String) {
   use piece <- result.try(board.get(board, pos))
   let piece_color = case piece.team {
@@ -74,15 +73,12 @@ pub fn render_piece(
   )
 }
 
-pub fn render_square(
-  board: Board,
-  pos: position.Position,
-) -> element.Element(Msg) {
+pub fn render_square(board: Board, pos: point.Point) -> element.Element(Msg) {
   html.div([attribute.class("square"), attribute.class(render.bg_color(pos))], [
     {
       let spot =
         html.div([attribute.style([#("font-size", "20px")])], [
-          element.text(position.to_string(pos)),
+          element.text(point.to_string(pos)),
         ])
       render_piece(board, pos)
       |> result.unwrap(html.div([], [spot]))
@@ -90,11 +86,11 @@ pub fn render_square(
   ])
 }
 
-pub fn render_file(board: Board, file: File) -> element.Element(Msg) {
+pub fn render_row(board: Board, col: Int) -> element.Element(Msg) {
   html.div(
     [attribute.class("file")],
-    list.map(rank.ranks() |> list.reverse(), fn(rank) {
-      let assert Ok(p) = position.new(Ok(file), Ok(rank))
+    list.map(point.indexes() |> list.reverse(), fn(row) {
+      let assert Ok(p) = point.new(col, row)
       render_square(board, p)
     }),
   )
@@ -104,8 +100,8 @@ pub fn view(model: Model) -> element.Element(Msg) {
   let board = model.board
   html.pre(
     [attribute.class("chessboard")],
-    list.map(file.files() |> list.reverse(), fn(file) {
-      render_file(board, file)
+    list.map(point.indexes() |> list.reverse(), fn(col) {
+      render_row(board, col)
     }),
   )
 }

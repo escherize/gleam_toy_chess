@@ -1,46 +1,44 @@
-import file
 import gleam/dict.{type Dict}
+import gleam/io
 import gleam/list
 import gleam/result
 import piece.{type Piece, Piece}
-import position.{type Position, Position}
-import rank
+import point.{type Point}
 import team
 
 pub type Board =
-  Dict(Position, Piece)
+  Dict(Point, Piece)
 
-pub fn starting_row(b: Board, r: rank.Rank, t: team.Team) -> Board {
+pub fn starting_row(b: Board, r: point.Rank, t: team.Team) -> Board {
   b
-  |> dict.insert(Position(file.A, r), piece.new(t, piece.Rook))
-  |> dict.insert(Position(file.B, r), piece.new(t, piece.Knight))
-  |> dict.insert(Position(file.C, r), piece.new(t, piece.Bishop))
-  |> dict.insert(Position(file.D, r), piece.new(t, piece.Queen))
-  |> dict.insert(Position(file.E, r), piece.new(t, piece.King))
-  |> dict.insert(Position(file.F, r), piece.new(t, piece.Bishop))
-  |> dict.insert(Position(file.G, r), piece.new(t, piece.Knight))
-  |> dict.insert(Position(file.H, r), piece.new(t, piece.Rook))
+  |> dict.insert(point.new_ok(r, 1), piece.new(t, piece.Rook))
+  |> dict.insert(point.new_ok(r, 2), piece.new(t, piece.Knight))
+  |> dict.insert(point.new_ok(r, 3), piece.new(t, piece.Bishop))
+  |> dict.insert(point.new_ok(r, 4), piece.new(t, piece.Queen))
+  |> dict.insert(point.new_ok(r, 5), piece.new(t, piece.King))
+  |> dict.insert(point.new_ok(r, 6), piece.new(t, piece.Bishop))
+  |> dict.insert(point.new_ok(r, 7), piece.new(t, piece.Knight))
+  |> dict.insert(point.new_ok(r, 8), piece.new(t, piece.Rook))
 }
 
-pub fn starting_pawns(board: Board, r: rank.Rank, t: team.Team) -> Board {
-  list.fold(file.files(), board, fn(b, f) {
-    dict.insert(b, Position(f, r), piece.new(t, piece.Pawn))
+pub fn starting_pawns(board: Board, r: point.Rank, t: team.Team) -> Board {
+  point.indexes() |> io.debug
+  list.fold(point.indexes(), board, fn(b, f) {
+    io.debug(#(r, f))
+    let assert Ok(point) = point.new(r, f)
+    dict.insert(b, point, piece.new(t, piece.Pawn))
   })
 }
 
 pub fn new_board() -> Board {
-  let assert Ok(white_start) = rank.new(1)
-  let assert Ok(black_start) = rank.new(8)
-  let assert Ok(white_pawns) = rank.new(2)
-  let assert Ok(black_pawns) = rank.new(7)
   dict.new()
-  |> starting_row(white_start, team.White)
-  |> starting_pawns(white_pawns, team.White)
-  |> starting_row(black_start, team.Black)
-  |> starting_pawns(black_pawns, team.Black)
+  |> starting_row(1, team.White)
+  |> starting_pawns(2, team.White)
+  |> starting_row(8, team.Black)
+  |> starting_pawns(7, team.Black)
 }
 
-pub fn get(board: Board, position: Position) -> Result(Piece, String) {
+pub fn get(board: Board, position: point.Point) -> Result(Piece, String) {
   dict.get(board, position)
   |> result.map_error(fn(_) { "No piece at position" })
 }

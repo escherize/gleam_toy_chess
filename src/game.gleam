@@ -1,12 +1,9 @@
 import board
-import coordinate
-import file.{A}
 import gleam/list
 import gleam/option.{type Option, None}
 import gleam/result
 import piece
-import position.{type Position}
-import rank
+import point.{type Point}
 import team
 import util
 
@@ -30,18 +27,16 @@ pub fn new() -> Game {
 
 pub fn king_moves(
   _board: board.Board,
-  pos: Position,
+  pos: point.Point,
   piece: piece.Piece,
-) -> List(Result(Position, String)) {
-  list.map(coordinate.dirs(), fn(step) {
-    coordinate.pos_add(pos, step, piece.team)
-  })
+) -> List(Result(point.Point, String)) {
+  []
   // TODO: remove more invalid moves:
   // - moves that would put the king in check
   // - moves that would put the king ontop of his own team's piece
 }
 
-pub fn legal_moves(game: Game, pos: Position) -> List(Position) {
+pub fn legal_moves(game: Game, pos: point.Point) -> List(point.Point) {
   case board.get(game.board, pos) {
     Ok(piece) -> {
       case piece.kind {
@@ -50,8 +45,7 @@ pub fn legal_moves(game: Game, pos: Position) -> List(Position) {
         piece.Bishop -> []
         piece.Knight -> []
         piece.Pawn -> {
-          [coordinate.pos_add(pos, coordinate.Forward, piece.team)]
-          |> result.values
+          []
         }
         piece.Queen -> []
         piece.Rook -> []
