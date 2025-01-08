@@ -3,32 +3,14 @@ import gleam/list.{map}
 import gleam/string
 import util
 
-/// A vertical column on a chess board, numbered from 1 to 8.
-/// Adressed via the x axis.
-/// The leftmost column is 1, the rightmost column is 8.
-type File =
-  Int
-
-/// Rows on a chess board, numbered from 1 to 8.
-/// Adressed via the y axis.
-/// The bottom row is 1, the top row is 8.
-/// 1 is the row closest to the black player, 8 is the row closest to the white player.
-type Rank =
-  Int
-
 /// The x and y coordinates of a chess piece, used for rendering.
-pub opaque type Point {
-  Point(file: File, rank: Rank)
+pub type Point {
+  Point(x: Int, y: Int)
 }
 
-pub fn x(p: Point) -> File {
-  p.file
-}
-
-pub fn y(p: Point) -> Rank {
-  p.rank
-}
-
+/// Returns a list of all the ranks and files on a chess board.
+/// These indexes are garanteed to be valid, as they are used to generate all possible points.
+/// This is useful for iterating over all the rows/cols on a chess board
 pub fn indexes() {
   list.range(1, 8)
 }
@@ -36,15 +18,15 @@ pub fn indexes() {
 pub fn all() -> List(Point) {
   let ranks = indexes()
   let files = indexes()
-  util.cartesian_product(ranks, files)
+  util.cartesian_product(files, ranks)
   |> map(fn(rf) {
     let #(r, f) = rf
-    let assert Ok(p) = new(r, f)
+    let assert Ok(p) = new(f, r)
     p
   })
 }
 
-pub fn new(rank rank: Rank, file file: File) -> Result(Point, String) {
+pub fn new(rank: Int, file: Int) -> Result(Point, String) {
   case rank >= 1, rank <= 8, file >= 1, file <= 8 {
     True, True, True, True -> Ok(Point(rank, file))
     _, _, _, _ ->
@@ -57,21 +39,21 @@ pub fn new(rank rank: Rank, file file: File) -> Result(Point, String) {
   }
 }
 
-pub fn new_ok(rank: Rank, file: File) -> Point {
-  case new(rank: rank, file: file) {
+pub fn new_ok(y: Int, x: Int) -> Point {
+  case new(y, x) {
     Ok(p) -> p
     Error(_) -> panic as "uh oh, new_ok failed. "
   }
 }
 
 pub fn add(c1: Point, c2: Point) -> Result(Point, String) {
-  new(c1.rank + c2.rank, c1.file + c2.file)
+  new(c1.y + c2.y, c1.x + c2.x)
 }
 
 // Printing
 
 pub fn file_str(p: Point) -> String {
-  case p.rank {
+  case p.y {
     1 -> "A"
     2 -> "B"
     3 -> "C"
@@ -85,18 +67,18 @@ pub fn file_str(p: Point) -> String {
 }
 
 pub fn rank_str(p: Point) -> String {
-  int.to_string(p.file)
+  int.to_string(p.x)
 }
 
 pub fn to_string(p: Point) -> String {
-  rank_str(p) <> file_str(p)
+  file_str(p) <> rank_str(p)
 }
 
 pub fn parse(s: String) -> Result(Point, String) {
   let up = s |> string.uppercase
   let lhs = up |> string.slice(0, 1)
   let rhs = up |> string.slice(1, 2)
-  let parse_rank = fn(rhs: String) -> File {
+  let parse_rank = fn(rhs: String) -> Int {
     case int.parse(rhs) {
       Ok(i) -> i
       Error(_) -> panic as "impossible"
