@@ -13,6 +13,7 @@ import piece
 import point
 import pprint
 import render
+import team
 
 pub type Model =
   Game
@@ -67,7 +68,12 @@ pub fn update(model: Model, msg: Msg) -> Model {
               let new_board =
                 board |> board.set(pos, piece) |> board.delete(from)
               io.debug(new_board == board)
-              game.Game(..model, board: new_board, mode: Idle)
+              game.Game(
+                ..model,
+                board: new_board,
+                mode: Idle,
+                team_turn: team.opposite(model.team_turn),
+              )
             }
             Error(_) -> {
               model
@@ -185,10 +191,13 @@ pub fn render_square(model: Model, pos: point.Point) -> element.Element(Msg) {
 
 pub fn info_section(model: Model) {
   html.div([], [
-    element.text(pprint.with_config(
-      model.mode,
-      pprint.Config(pprint.Unstyled, pprint.BitArraysAsString, pprint.Labels),
-    )),
+    html.div([], [
+      element.text(pprint.with_config(
+        model.mode,
+        pprint.Config(pprint.Unstyled, pprint.BitArraysAsString, pprint.Labels),
+      )),
+    ]),
+    html.div([], [element.text("turn: " <> pprint.format(model.team_turn))]),
     element.text(case model.mode {
       Selected(pt) -> {
         let legal_moves = game.legal_moves(model, pt)

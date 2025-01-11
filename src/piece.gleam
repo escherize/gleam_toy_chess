@@ -1,4 +1,4 @@
-import team
+import team.{type Team}
 
 pub type PieceKind {
   Pawn
@@ -10,10 +10,10 @@ pub type PieceKind {
 }
 
 pub type Piece {
-  Piece(team: team.Team, kind: PieceKind)
+  Piece(team: Team, kind: PieceKind)
 }
 
-pub fn new(team: team.Team, kind: PieceKind) -> Piece {
+pub fn new(team: Team, kind: PieceKind) -> Piece {
   Piece(team: team, kind: kind)
 }
 
