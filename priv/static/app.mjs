@@ -315,6 +315,20 @@ function compare(a, b) {
 }
 
 // build/dev/javascript/gleam_stdlib/gleam/result.mjs
+function is_ok(result) {
+  if (!result.isOk()) {
+    return false;
+  } else {
+    return true;
+  }
+}
+function is_error(result) {
+  if (result.isOk()) {
+    return false;
+  } else {
+    return true;
+  }
+}
 function map(result, fun) {
   if (result.isOk()) {
     let x = result[0];
@@ -350,9 +364,9 @@ function unwrap(result, default$) {
     return default$;
   }
 }
-function lazy_or(first2, second) {
-  if (first2.isOk()) {
-    return first2;
+function lazy_or(first3, second) {
+  if (first3.isOk()) {
+    return first3;
   } else {
     return second();
   }
@@ -1238,15 +1252,15 @@ function graphemes_iterator(string2) {
   }
 }
 function pop_grapheme(string2) {
-  let first2;
+  let first3;
   const iterator = graphemes_iterator(string2);
   if (iterator) {
-    first2 = iterator.next().value?.segment;
+    first3 = iterator.next().value?.segment;
   } else {
-    first2 = string2.match(/./su)?.[0];
+    first3 = string2.match(/./su)?.[0];
   }
-  if (first2) {
-    return new Ok([first2, string2.slice(first2.length)]);
+  if (first3) {
+    return new Ok([first3, string2.slice(first3.length)]);
   } else {
     return new Error(Nil);
   }
@@ -1489,12 +1503,12 @@ function inspectString(str) {
 }
 function inspectDict(map4) {
   let body = "dict.from_list([";
-  let first2 = true;
+  let first3 = true;
   map4.forEach((value, key) => {
-    if (!first2)
+    if (!first3)
       body = body + ", ";
     body = body + "#(" + inspect(key) + ", " + inspect(value) + ")";
-    first2 = false;
+    first3 = false;
   });
   return body + "])";
 }
@@ -1567,10 +1581,10 @@ function do_keys_loop(loop$list, loop$acc) {
     if (list2.hasLength(0)) {
       return reverse_and_concat(acc, toList([]));
     } else {
-      let first2 = list2.head;
+      let first3 = list2.head;
       let rest = list2.tail;
       loop$list = rest;
-      loop$acc = prepend(first2[0], acc);
+      loop$acc = prepend(first3[0], acc);
     }
   }
 }
@@ -1619,6 +1633,41 @@ function contains(loop$list, loop$elem) {
       loop$elem = elem;
     }
   }
+}
+function first(list2) {
+  if (list2.hasLength(0)) {
+    return new Error(void 0);
+  } else {
+    let x = list2.head;
+    return new Ok(x);
+  }
+}
+function filter_loop(loop$list, loop$fun, loop$acc) {
+  while (true) {
+    let list2 = loop$list;
+    let fun = loop$fun;
+    let acc = loop$acc;
+    if (list2.hasLength(0)) {
+      return reverse(acc);
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      let new_acc = (() => {
+        let $ = fun(first$1);
+        if ($) {
+          return prepend(first$1, acc);
+        } else {
+          return acc;
+        }
+      })();
+      loop$list = rest$1;
+      loop$fun = fun;
+      loop$acc = new_acc;
+    }
+  }
+}
+function filter(list2, predicate) {
+  return filter_loop(list2, predicate, toList([]));
 }
 function filter_map_loop(loop$list, loop$fun, loop$acc) {
   while (true) {
@@ -1695,20 +1744,20 @@ function try_map(list2, fun) {
 }
 function append_loop(loop$first, loop$second) {
   while (true) {
-    let first2 = loop$first;
+    let first3 = loop$first;
     let second = loop$second;
-    if (first2.hasLength(0)) {
+    if (first3.hasLength(0)) {
       return second;
     } else {
-      let item = first2.head;
-      let rest$1 = first2.tail;
+      let item = first3.head;
+      let rest$1 = first3.tail;
       loop$first = rest$1;
       loop$second = prepend(item, second);
     }
   }
 }
-function append2(first2, second) {
-  return append_loop(reverse(first2), second);
+function append2(first3, second) {
+  return append_loop(reverse(first3), second);
 }
 function reverse_and_prepend(loop$prefix, loop$suffix) {
   while (true) {
@@ -1740,6 +1789,10 @@ function flatten_loop(loop$lists, loop$acc) {
 }
 function flatten(lists) {
   return flatten_loop(lists, toList([]));
+}
+function flat_map(list2, fun) {
+  let _pipe = map2(list2, fun);
+  return flatten(_pipe);
 }
 function fold(loop$list, loop$initial, loop$fun) {
   while (true) {
@@ -1777,6 +1830,25 @@ function index_fold_loop(loop$over, loop$acc, loop$with, loop$index) {
 }
 function index_fold(list2, initial, fun) {
   return index_fold_loop(list2, initial, fun, 0);
+}
+function any2(loop$list, loop$predicate) {
+  while (true) {
+    let list2 = loop$list;
+    let predicate = loop$predicate;
+    if (list2.hasLength(0)) {
+      return false;
+    } else {
+      let first$1 = list2.head;
+      let rest$1 = list2.tail;
+      let $ = predicate(first$1);
+      if ($) {
+        return true;
+      } else {
+        loop$list = rest$1;
+        loop$predicate = predicate;
+      }
+    }
+  }
 }
 function intersperse_loop(loop$list, loop$separator, loop$acc) {
   while (true) {
@@ -1954,9 +2026,9 @@ function merge_ascendings(loop$list1, loop$list2, loop$compare, loop$acc) {
     } else {
       let first1 = list1.head;
       let rest1 = list1.tail;
-      let first2 = list2.head;
+      let first22 = list2.head;
       let rest2 = list2.tail;
-      let $ = compare4(first1, first2);
+      let $ = compare4(first1, first22);
       if ($ instanceof Lt) {
         loop$list1 = rest1;
         loop$list2 = list2;
@@ -1966,12 +2038,12 @@ function merge_ascendings(loop$list1, loop$list2, loop$compare, loop$acc) {
         loop$list1 = list1;
         loop$list2 = rest2;
         loop$compare = compare4;
-        loop$acc = prepend(first2, acc);
+        loop$acc = prepend(first22, acc);
       } else {
         loop$list1 = list1;
         loop$list2 = rest2;
         loop$compare = compare4;
-        loop$acc = prepend(first2, acc);
+        loop$acc = prepend(first22, acc);
       }
     }
   }
@@ -2020,14 +2092,14 @@ function merge_descendings(loop$list1, loop$list2, loop$compare, loop$acc) {
     } else {
       let first1 = list1.head;
       let rest1 = list1.tail;
-      let first2 = list2.head;
+      let first22 = list2.head;
       let rest2 = list2.tail;
-      let $ = compare4(first1, first2);
+      let $ = compare4(first1, first22);
       if ($ instanceof Lt) {
         loop$list1 = list1;
         loop$list2 = rest2;
         loop$compare = compare4;
-        loop$acc = prepend(first2, acc);
+        loop$acc = prepend(first22, acc);
       } else if ($ instanceof Gt) {
         loop$list1 = rest1;
         loop$list2 = list2;
@@ -3952,6 +4024,13 @@ var White = class extends CustomType {
 };
 var Black = class extends CustomType {
 };
+function opposite(team) {
+  if (team instanceof White) {
+    return new Black();
+  } else {
+    return new White();
+  }
+}
 
 // build/dev/javascript/app/piece.mjs
 var Pawn = class extends CustomType {
@@ -4216,15 +4295,231 @@ function new$5() {
     new Idle()
   );
 }
-function pawn_starting_position(team, pos) {
-  let $ = pos.y;
-  if ($ === 2 && team instanceof White) {
-    return true;
-  } else if ($ === 7 && team instanceof Black) {
-    return true;
+function forward(piece) {
+  let $ = piece.team;
+  if ($ instanceof Black) {
+    return -1;
   } else {
-    return false;
+    return 1;
   }
+}
+function remove_blanks(legal_moves2, board) {
+  return filter(
+    legal_moves2,
+    (p) => {
+      let _pipe = get(board, p);
+      return is_ok(_pipe);
+    }
+  );
+}
+function remove_pieces(legal_moves2, board) {
+  return filter(
+    legal_moves2,
+    (p) => {
+      let _pipe = get(board, p);
+      return is_error(_pipe);
+    }
+  );
+}
+function remove_pieces_on_team(legal_moves2, board, team) {
+  return filter(
+    legal_moves2,
+    (point) => {
+      let $ = get(board, point);
+      if ($.isOk()) {
+        let piece = $[0];
+        return !isEqual(piece.team, team);
+      } else {
+        return true;
+      }
+    }
+  );
+}
+function point_on_board(point) {
+  return point.x > 0 && point.x < 9 && point.y > 0 && point.y < 9;
+}
+function do_step_until(loop$acc, loop$board, loop$start, loop$piece, loop$direction) {
+  while (true) {
+    let acc = loop$acc;
+    let board = loop$board;
+    let start3 = loop$start;
+    let piece = loop$piece;
+    let direction = loop$direction;
+    let next_pos = new Point(start3.x + direction[0], start3.y + direction[1]);
+    let $ = point_on_board(next_pos);
+    if ($) {
+      let $1 = get(board, next_pos);
+      if ($1.isOk()) {
+        let next_piece = $1[0];
+        let $2 = isEqual(next_piece.team, piece.team);
+        if ($2) {
+          return acc;
+        } else {
+          return prepend(next_pos, acc);
+        }
+      } else {
+        loop$acc = prepend(next_pos, acc);
+        loop$board = board;
+        loop$start = next_pos;
+        loop$piece = piece;
+        loop$direction = direction;
+      }
+    } else {
+      return acc;
+    }
+  }
+}
+function step_until(board, start3, piece, direction) {
+  return do_step_until(toList([]), board, start3, piece, direction);
+}
+function all_team_pieces(board, team) {
+  let _pipe = board;
+  let _pipe$1 = keys(_pipe);
+  return filter(
+    _pipe$1,
+    (point) => {
+      let $ = get(board, point);
+      if ($.isOk()) {
+        let piece = $[0];
+        return isEqual(piece.team, team);
+      } else {
+        return false;
+      }
+    }
+  );
+}
+function knight_moves(board, pos, piece) {
+  let moves = toList([
+    new Point(pos.x + 1, pos.y + 2),
+    new Point(pos.x + 2, pos.y + 1),
+    new Point(pos.x + 2, pos.y - 1),
+    new Point(pos.x + 1, pos.y - 2),
+    new Point(pos.x - 1, pos.y - 2),
+    new Point(pos.x - 2, pos.y - 1),
+    new Point(pos.x - 2, pos.y + 1),
+    new Point(pos.x - 1, pos.y + 2)
+  ]);
+  let _pipe = moves;
+  let _pipe$1 = remove_pieces_on_team(_pipe, board, piece.team);
+  return filter(_pipe$1, point_on_board);
+}
+function rook_moves(board, pos, piece) {
+  let _pipe = toList([[1, 0], [0, 1], [-1, 0], [0, -1]]);
+  return flat_map(
+    _pipe,
+    (direction) => {
+      return step_until(board, pos, piece, direction);
+    }
+  );
+}
+function bishop_moves(board, pos, piece) {
+  let _pipe = toList([[1, 1], [-1, 1], [-1, -1], [1, -1]]);
+  return flat_map(
+    _pipe,
+    (direction) => {
+      return step_until(board, pos, piece, direction);
+    }
+  );
+}
+function remove_blocked_pawn_step(moves, board) {
+  let $ = first(moves);
+  if (!$.isOk()) {
+    return toList([]);
+  } else {
+    let point = $[0];
+    let $1 = get(board, point);
+    if ($1.isOk()) {
+      return toList([]);
+    } else {
+      return moves;
+    }
+  }
+}
+function pawn_attack_positions(board, pos, piece) {
+  let dir = forward(piece);
+  let _pipe = toList([
+    new Point(pos.x + 1, pos.y + dir),
+    new Point(pos.x - 1, pos.y + dir)
+  ]);
+  let _pipe$1 = filter(
+    _pipe,
+    (point) => {
+      return point_on_board(point);
+    }
+  );
+  return remove_blanks(_pipe$1, board);
+}
+function pawn_moves(board, pos, piece) {
+  return (() => {
+    let dir = forward(piece);
+    let steps = (() => {
+      let _pipe = (() => {
+        let $ = pos.y;
+        let $1 = piece.team;
+        if ($ === 2 && $1 instanceof White) {
+          return toList([
+            new Point(pos.x, pos.y + dir),
+            new Point(pos.x, pos.y + dir + dir)
+          ]);
+        } else if ($ === 7 && $1 instanceof Black) {
+          return toList([
+            new Point(pos.x, pos.y + dir),
+            new Point(pos.x, pos.y + dir + dir)
+          ]);
+        } else {
+          return toList([new Point(pos.x, pos.y + dir)]);
+        }
+      })();
+      let _pipe$1 = remove_blocked_pawn_step(_pipe, board);
+      return remove_pieces(_pipe$1, board);
+    })();
+    let attacks = (() => {
+      let _pipe = pawn_attack_positions(board, pos, piece);
+      return remove_pieces_on_team(_pipe, board, piece.team);
+    })();
+    return append2(steps, attacks);
+  })();
+}
+function king_moves(board, pos, piece) {
+  let moves = toList([
+    new Point(pos.x + 1, pos.y),
+    new Point(pos.x + 1, pos.y + 1),
+    new Point(pos.x, pos.y + 1),
+    new Point(pos.x - 1, pos.y + 1),
+    new Point(pos.x - 1, pos.y),
+    new Point(pos.x - 1, pos.y - 1),
+    new Point(pos.x, pos.y - 1),
+    new Point(pos.x + 1, pos.y - 1)
+  ]);
+  let _pipe = moves;
+  let _pipe$1 = filter(_pipe, point_on_board);
+  let _pipe$2 = remove_pieces_on_team(_pipe$1, board, piece.team);
+  return filter(
+    _pipe$2,
+    (point) => {
+      return !in_check(board, point, piece.team);
+    }
+  );
+}
+function in_check(board, pos, team) {
+  let enemy_team = opposite(team);
+  let enemy_pieces = all_team_pieces(board, enemy_team);
+  return any2(
+    enemy_pieces,
+    (enemy_pos) => {
+      let $ = get(board, enemy_pos);
+      if ($.isOk()) {
+        let piece = $[0];
+        let moves = legal_moves(
+          new Game(board, team, new None(), new None(), new Idle()),
+          enemy_pos
+        );
+        return contains(moves, pos);
+      } else {
+        return false;
+      }
+    }
+  );
 }
 function legal_moves(game, pos) {
   let $ = get(game.board, pos);
@@ -4232,22 +4527,21 @@ function legal_moves(game, pos) {
     let piece = $[0];
     let $1 = piece.kind;
     if ($1 instanceof King) {
-      return toList([]);
+      return king_moves(game.board, pos, piece);
     } else if ($1 instanceof Bishop) {
-      return toList([]);
+      return bishop_moves(game.board, pos, piece);
     } else if ($1 instanceof Knight) {
-      return toList([]);
+      return knight_moves(game.board, pos, piece);
     } else if ($1 instanceof Pawn) {
-      let $2 = pawn_starting_position(game.team_turn, pos);
-      if ($2) {
-        return toList([new Point(pos.x, pos.y + 1), new Point(pos.x, pos.y + 2)]);
-      } else {
-        return toList([new Point(pos.x, pos.y + 1)]);
-      }
+      let _pipe = pawn_moves(game.board, pos, piece);
+      return debug(_pipe);
     } else if ($1 instanceof Queen) {
-      return toList([]);
+      return append2(
+        bishop_moves(game.board, pos, piece),
+        rook_moves(game.board, pos, piece)
+      );
     } else {
-      return toList([]);
+      return rook_moves(game.board, pos, piece);
     }
   } else {
     return toList([]);
@@ -4357,7 +4651,7 @@ function update(model, msg) {
         let _record = model;
         return new Game(
           new_board2,
-          _record.team_turn,
+          opposite(model.team_turn),
           _record.check,
           _record.winner,
           new Idle()
@@ -4417,6 +4711,20 @@ function render_piece(model, pos) {
     }
   );
 }
+function blank_square(pos) {
+  return div(
+    toList([
+      style(
+        toList([
+          ["font-size", "8px"],
+          ["margin-top", "34px"],
+          ["margin-left", "32px"]
+        ])
+      )
+    ]),
+    toList([text(to_string5(pos))])
+  );
+}
 function render_idle_square(model, pos) {
   let board = model.board;
   return div(
@@ -4431,16 +4739,7 @@ function render_idle_square(model, pos) {
           let _pipe = render_piece(model, pos);
           return unwrap(_pipe, text("?"));
         } else {
-          return div(
-            toList([style(toList([["font-size", "10px"]]))]),
-            toList([
-              text(
-                to_string5(pos) + "|" + inspect2(pos.x) + "," + inspect2(
-                  pos.y
-                )
-              )
-            ])
-          );
+          return blank_square(pos);
         }
       })()
     ])
@@ -4449,14 +4748,35 @@ function render_idle_square(model, pos) {
 function render_selected_square(model, pos, legal_moves2) {
   let $ = contains(legal_moves2, pos);
   if ($) {
-    debug(["legal move: ", pos]);
-    return div(
-      toList([
-        style(toList([["font-size", "13px"]])),
-        on_click(new UserMovedPieceTo(pos))
-      ]),
-      toList([text(to_string5(pos))])
-    );
+    let $1 = get(model.board, pos);
+    if ($1.isOk()) {
+      let piece = $1[0];
+      let piece_color2 = piece_color(piece);
+      return div(
+        toList([
+          class$("square"),
+          class$(bg_color(pos)),
+          classes(
+            toList([["selected", contains(legal_moves2, pos)]])
+          ),
+          on_click(new UserMovedPieceTo(pos)),
+          style(toList([["color", piece_color2]]))
+        ]),
+        toList([text(to_string4(piece))])
+      );
+    } else {
+      return div(
+        toList([
+          class$("square"),
+          class$(bg_color(pos)),
+          classes(
+            toList([["selected", contains(legal_moves2, pos)]])
+          ),
+          on_click(new UserMovedPieceTo(pos))
+        ]),
+        toList([blank_square(pos)])
+      );
+    }
   } else {
     return render_idle_square(model, pos);
   }
@@ -4476,15 +4796,24 @@ function info_section(model) {
   return div(
     toList([]),
     toList([
-      text(
-        with_config(
-          model.mode,
-          new Config(
-            new Unstyled(),
-            new BitArraysAsString(),
-            new Labels()
+      div(
+        toList([]),
+        toList([
+          text(
+            with_config(
+              model.mode,
+              new Config(
+                new Unstyled(),
+                new BitArraysAsString(),
+                new Labels()
+              )
+            )
           )
-        )
+        ])
+      ),
+      div(
+        toList([]),
+        toList([text("turn: " + format(model.team_turn))])
       ),
       text(
         (() => {
@@ -4531,7 +4860,7 @@ function main() {
     throw makeError(
       "let_assert",
       "app",
-      219,
+      256,
       "main",
       "Pattern match failed, no pattern matched the value.",
       { value: $ }

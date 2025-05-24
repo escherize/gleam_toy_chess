@@ -10,7 +10,7 @@ import lustre/element
 import lustre/element/html
 import lustre/event.{on_click}
 import piece
-import point
+import point.{type Point}
 import pprint
 import render
 import team
@@ -23,12 +23,12 @@ fn init(_flags) -> Model {
 }
 
 pub type Msg {
-  UserClickedPiece(point.Point)
-  UserClickedSquare(point.Point)
-  UserMovedPieceTo(point.Point)
+  UserClickedPiece(Point)
+  UserClickedSquare(Point)
+  UserMovedPieceTo(Point)
 }
 
-pub fn handle_clicked_piece(model: Model, pt: point.Point) -> Model {
+pub fn handle_clicked_piece(model: Model, pt: Point) -> Model {
   let board = model.board
   case board.get(board, pt), model.mode {
     Ok(_piece), _ -> {
@@ -90,7 +90,7 @@ pub fn update(model: Model, msg: Msg) -> Model {
 
 pub fn render_piece(
   model: Model,
-  pos: point.Point,
+  pos: Point,
 ) -> Result(element.Element(Msg), String) {
   let board = model.board
   use piece <- result.try(board.get(board, pos))
@@ -128,10 +128,26 @@ pub fn render_piece(
   )
 }
 
-pub fn render_idle_square(
-  model: Model,
-  pos: point.Point,
-) -> element.Element(Msg) {
+pub fn blank_square(pos: Point) {
+  html.div(
+    [
+      attribute.style([
+        #("font-size", "8px"),
+        #("margin-top", "34px"),
+        #("margin-left", "32px"),
+      ]),
+    ],
+    [
+      element.text(point.to_string(pos)// <> "|"
+      // <> string.inspect(pos.x)
+      // <> ","
+      // <> string.inspect(pos.y),
+      ),
+    ],
+  )
+}
+
+pub fn render_idle_square(model: Model, pos: Point) -> element.Element(Msg) {
   let board = model.board
   html.div([attribute.class("square"), attribute.class(render.bg_color(pos))], [
     case board.get(board, pos) {
@@ -140,15 +156,7 @@ pub fn render_idle_square(
         |> result.unwrap(element.text("?"))
       }
       Error(_) -> {
-        html.div([attribute.style([#("font-size", "10px")])], [
-          element.text(
-            point.to_string(pos)
-            <> "|"
-            <> string.inspect(pos.x)
-            <> ","
-            <> string.inspect(pos.y),
-          ),
-        ])
+        blank_square(pos)
       }
     },
   ])
@@ -156,19 +164,39 @@ pub fn render_idle_square(
 
 pub fn render_selected_square(
   model: Model,
-  pos: point.Point,
-  legal_moves: List(point.Point),
+  pos: Point,
+  legal_moves: List(Point),
 ) -> element.Element(Msg) {
   case list.contains(legal_moves, pos) {
     True -> {
-      io.debug(#("legal move: ", pos))
-      html.div(
-        [
-          attribute.style([#("font-size", "13px")]),
-          on_click(UserMovedPieceTo(pos)),
-        ],
-        [element.text(point.to_string(pos))],
-      )
+      case board.get(model.board, pos) {
+        Ok(piece) -> {
+          let piece_color = render.piece_color(piece)
+          html.div(
+            [
+              attribute.class("square"),
+              attribute.class(render.bg_color(pos)),
+              attribute.classes([#("selected", list.contains(legal_moves, pos))]),
+              // attribute.style([#("font-size", "13px")]),
+              on_click(UserMovedPieceTo(pos)),
+              attribute.style([#("color", piece_color)]),
+            ],
+            [element.text(piece.to_string(piece))],
+          )
+        }
+        Error(_) -> {
+          html.div(
+            [
+              attribute.class("square"),
+              attribute.class(render.bg_color(pos)),
+              attribute.classes([#("selected", list.contains(legal_moves, pos))]),
+              // attribute.style([#("font-size", "13px")]),
+              on_click(UserMovedPieceTo(pos)),
+            ],
+            [blank_square(pos)],
+          )
+        }
+      }
     }
     False -> {
       render_idle_square(model, pos)
@@ -176,7 +204,7 @@ pub fn render_selected_square(
   }
 }
 
-pub fn render_square(model: Model, pos: point.Point) -> element.Element(Msg) {
+pub fn render_square(model: Model, pos: Point) -> element.Element(Msg) {
   case model.mode {
     Selected(pt) -> {
       io.debug(#("selected: ", pt))

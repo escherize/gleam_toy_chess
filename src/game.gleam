@@ -1,5 +1,3 @@
-//// Utils
-
 import board.{type Board}
 import gleam/dict
 import gleam/io
@@ -226,7 +224,7 @@ pub fn legal_moves(game: Game, pos: Point) -> List(Point) {
         //king_moves(game.board, pos, piece)
         Bishop -> bishop_moves(game.board, pos, piece)
         Knight -> knight_moves(game.board, pos, piece)
-        Pawn -> pawn_moves(game.board, pos, piece)
+        Pawn -> pawn_moves(game.board, pos, piece) |> io.debug
         Queen ->
           list.append(
             bishop_moves(game.board, pos, piece),
